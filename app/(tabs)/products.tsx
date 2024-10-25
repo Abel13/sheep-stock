@@ -66,7 +66,7 @@ export default function Products() {
             <View style={{ flex: 1 }}>
               <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>{item.product_code}</Text>
               <Text>{item.product_name}</Text>
-              <View style={{borderWidth: 1, padding: 2, marginTop: 5}}>
+              <View style={{marginTop: 10}}>
                 <Text>Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}</Text>
               </View>
             </View>

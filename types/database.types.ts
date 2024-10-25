@@ -110,12 +110,77 @@ export type Database = {
         }
         Relationships: []
       }
+      sale_products: {
+        Row: {
+          id: string
+          product_code: string | null
+          quantity: number
+          sale_id: string | null
+          total_price: number | null
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          product_code?: string | null
+          quantity: number
+          sale_id?: string | null
+          total_price?: number | null
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          product_code?: string | null
+          quantity?: number
+          sale_id?: string | null
+          total_price?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_products_product_code_fkey"
+            columns: ["product_code"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["product_code"]
+          },
+          {
+            foreignKeyName: "sale_products_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          id: string
+          sale_date: string | null
+          total_amount: number
+        }
+        Insert: {
+          id?: string
+          sale_date?: string | null
+          total_amount: number
+        }
+        Update: {
+          id?: string
+          sale_date?: string | null
+          total_amount?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_average_price: {
+        Args: {
+          product_code_input: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

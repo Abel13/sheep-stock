@@ -1,9 +1,9 @@
 import { View, Text } from 'react-native';
 
-export default function Purchases() {
+export default function Orders() {
   return (
     <View>
-      <Text>Purchases Screen</Text>
+      <Text>Orders Screen</Text>
     </View>
   );
 }
