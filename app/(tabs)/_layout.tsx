@@ -12,7 +12,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="sales"
         options={{
-          title: 'Sales',
+          title: 'Vendas',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cash-outline" color={color} size={size} />
           ),
@@ -21,7 +21,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="purchases"
         options={{
-          title: 'Purchases',
+          title: 'Compras',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cart-outline" color={color} size={size} />
           ),
@@ -30,7 +30,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="products"
         options={{
-          title: 'Products',
+          title: 'Estoque',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="pricetag-outline" color={color} size={size} />
           ),
@@ -39,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Orders',
+          title: 'Novo Pedido',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="receipt-outline" color={color} size={size} />
           ),

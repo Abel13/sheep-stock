@@ -1,135 +1,57 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient'; // Importando o Supabase Client do caminho correto
-import { View, Text, Button, FlatList, TextInput, Alert } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
+import { View, Text, FlatList, TextInput, Alert, Pressable } from 'react-native';
 import { Product } from '@/types/Product';
+import { Colors } from '@/constants/Colors';
+import { Center } from '@/components/ui/center';
+import { useRouter } from 'expo-router';
 
-// Função para buscar produtos do Supabase
-const fetchProducts = async () => {
-  const { data, error } = await supabase.from('products').select('*');
+const fetchProducts = async (search: string) => {
+  let query = supabase.from('products').select('*').order('product_name');
+  if (search) {
+    query = query.or(`product_name.ilike.%${search}%,product_code.ilike.%${search}%`);
+  }
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data;
 };
 
-// Função para adicionar um novo produto ao Supabase
-const addProduct = async (product: Product) => {
-  const { error } = await supabase.from('products').insert([product]);
-  if (error) throw new Error(error.message);
-};
-
-// Função para deletar um produto no Supabase
-const deleteProduct = async (id: string) => {
-  const { error } = await supabase.from('products').delete().eq('product_code', id);
-  if (error) throw new Error(error.message);
-};
-
 export default function Products() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const [search, setSearch] = useState('');
 
-  // Manipulação de formulário com React Hook Form
-  const { control, handleSubmit, reset } = useForm();
-  
-  // Estado para exibir/esconder o formulário de adição de produto
-  const [showForm, setShowForm] = useState(false);
-
-  // Buscando produtos com React Query
   const { data: products, error, isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: fetchProducts,
+    queryKey: ['products', search],
+    queryFn: () => fetchProducts(search),
   });
 
-  // Mutação para adicionar um novo produto
-  const mutationAdd = useMutation({
-    mutationFn: addProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] }); // Refaz a consulta de produtos
-      reset();
-      setShowForm(false); // Esconde o formulário após a submissão
-    },
-  });
-
-  // Mutação para deletar um produto
-  const mutationDelete = useMutation({
-    mutationFn: deleteProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] }); // Refaz a consulta de produtos
-    },
-  });
-
-  const handleAddProduct = (data: Product) => {
-    mutationAdd.mutate({
-      name: data.product_name,
-      average_cost_price: 0,
-      sale_price: 0,
-    });
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    Alert.alert('Confirm', 'Do you really want to delete this product?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', onPress: () => mutationDelete.mutate(id) },
-    ]);
-  };
-
-  if (isLoading) return <Text>Loading...</Text>;
+  if (isLoading && !search) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;
 
   return (
-    <View style={{ padding: 20 }}>
-      <Button title="Add New Product" onPress={() => setShowForm(!showForm)} />
-      
-      {showForm && (
-        <View style={{ marginVertical: 20 }}>
-          <Text>Add a new product</Text>
-          <Controller
-            control={control}
-            name="name"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Product Name"
-                value={value}
-                onChangeText={onChange}
-                style={{ borderBottomWidth: 1, marginBottom: 10 }}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="average_cost_price"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Average Cost Price"
-                value={value}
-                onChangeText={onChange}
-                keyboardType="numeric"
-                style={{ borderBottomWidth: 1, marginBottom: 10 }}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="sale_price"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Sale Price"
-                value={value}
-                onChangeText={onChange}
-                keyboardType="numeric"
-                style={{ borderBottomWidth: 1, marginBottom: 10 }}
-              />
-            )}
-          />
-          <Button title="Submit" onPress={handleSubmit(handleAddProduct)} />
-        </View>
-      )}
+    <View style={{ flex:1, paddingHorizontal: 20, paddingTop: 10, backgroundColor: Colors.light.background }}>
+      <TextInput
+        placeholder="Procure itens por nome ou código"
+        value={search}
+        onChangeText={setSearch}
+        style={{ borderBottomWidth: 1, marginBottom: 20, padding: 8 }}
+      />
 
       <FlatList
         data={products}
         keyExtractor={(item: Product) => item.product_code}
-        ItemSeparatorComponent={()=><View style={{height: 5}} />}
+        ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
         renderItem={({ item }) => (
-          <View
+          <Pressable
+            onPress={() => router.push({
+              pathname: `/product/[id]`,
+              params: {
+                  id: item.product_code
+                }
+              })
+            }
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
@@ -137,20 +59,22 @@ export default function Products() {
               paddingVertical: 10,
               paddingHorizontal: 10,
               borderWidth: 1,
-              borderRadius: 7
+              borderColor: Colors.light.icon,
+              borderRadius: 7,
             }}
           >
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
+              <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>{item.product_code}</Text>
               <Text>{item.product_name}</Text>
-              {/* <Text>Cost Price: {item.average_cost_price}</Text>
-              <Text>Sale Price: {item.sale_price}</Text> */}
+              <View style={{borderWidth: 1, padding: 2, marginTop: 5}}>
+                <Text>Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}</Text>
+              </View>
             </View>
-            <Button
-              title="Delete"
-              color="red"
-              onPress={() => handleDeleteProduct(item.product_code)}
-            />
-          </View>
+            <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
+              <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>ESTOQUE</Text>
+              <Text style={{fontSize: 30}}>{item.stock_quantity}</Text>
+            </View>
+          </Pressable>
         )}
       />
     </View>

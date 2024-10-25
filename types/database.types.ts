@@ -39,7 +39,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "products_order_id_fkey"
+            foreignKeyName: "order_products_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
@@ -93,16 +93,19 @@ export type Database = {
         Row: {
           product_code: string
           product_name: string | null
+          sale_price: number | null
           stock_quantity: number | null
         }
         Insert: {
           product_code: string
           product_name?: string | null
+          sale_price?: number | null
           stock_quantity?: number | null
         }
         Update: {
           product_code?: string
           product_name?: string | null
+          sale_price?: number | null
           stock_quantity?: number | null
         }
         Relationships: []
