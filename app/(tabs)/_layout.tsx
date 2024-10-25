@@ -1,29 +1,47 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-      }}
-    >
+    <Tabs>
+      <Tabs.Screen
+        name="sales"
+        options={{
+          title: 'Sales',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cash-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="purchases"
+        options={{
+          title: 'Purchases',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cart-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="products"
+        options={{
+          title: 'Products',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="pricetag-outline" color={color} size={size} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? 'home' : 'home-outline'}
-              color={color}
-            />
+          title: 'Orders',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="receipt-outline" color={color} size={size} />
           ),
         }}
       />
