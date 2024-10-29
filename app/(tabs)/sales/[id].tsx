@@ -4,8 +4,11 @@ import { supabase } from '@/services/supabaseClient';
 import { View, Text, FlatList } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Button, ButtonText } from '@/components/ui/button';
 
-const fetchSaleDetails = async (saleId) => {
+const fetchSaleDetails = async ({ queryKey }) => {
+  const [, saleId] = queryKey;
+
   const { data: saleData, error: saleError } = await supabase
     .from('sales')
     .select('*')
@@ -27,7 +30,12 @@ const fetchSaleDetails = async (saleId) => {
 export default function SaleDetails() {
   const { id } = useLocalSearchParams();
   const saleId = id?.toString() || '';
-  const { data, error, isLoading } = useQuery(['saleDetails', saleId], () => fetchSaleDetails(saleId));
+  const router = useRouter()
+
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['saleDetails', saleId],
+    queryFn: fetchSaleDetails,
+  });
 
   if (isLoading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;

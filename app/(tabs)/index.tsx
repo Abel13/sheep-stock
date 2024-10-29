@@ -11,6 +11,7 @@ const fetchProducts = async (search: string) => {
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .neq('stock_quantity', 0)
       .ilike('product_name', `%${search}%`);
     if (error) throw new Error(error.message);
     return data;

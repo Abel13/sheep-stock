@@ -21,6 +21,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="sales"
         options={{
+          headerShown: false,
           title: 'Vendas',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cash-outline" color={color} size={size} />
@@ -30,6 +31,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="products"
         options={{
+          headerShown: false,
           title: 'Estoque',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="pricetag-outline" color={color} size={size} />

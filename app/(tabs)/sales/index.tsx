@@ -43,7 +43,7 @@ export default function Sales() {
         renderItem={({ item }) => (
           <Pressable
             onPress={() => router.push({
-              pathname: `/sale/[id]`,
+              pathname: '/(tabs)/sales/[id]',
               params: {
                 id: item.id
               }

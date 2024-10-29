@@ -19,14 +19,19 @@ const fetchAveragePrice = async (productId: string) => {
     product_code_input: productId,
   });
   if (error) throw new Error(error.message);
-  return data || 0; // Retorna 0 se não houver dados
+  return data || 0;
 };
 
 // Função para buscar o preço sugerido
 const fetchSuggestedPrice = async (productId: string) => {
-  const { data, error } = await supabase.from('suggested_price').select('price').eq('product_code', productId).single();
+  const { data, error } = await supabase
+    .from('suggested_prices') // Verifique se o nome da tabela está correto aqui
+    .select('price')
+    .eq('product_code', productId)
+    .maybeSingle(); // Usa maybeSingle para evitar erro de múltiplas ou nenhuma linha encontrada
+  
   if (error) throw new Error(error.message);
-  return data ? data.price : null;
+  return data?.price || null; // Retorna null caso não haja preço sugerido
 };
 
 // Função para atualizar o preço de venda do produto
@@ -36,30 +41,26 @@ const updateProductSalePrice = async ({ productId, salePrice }: { productId: str
 };
 
 export default function ProductEdit() {
-  const { id } = useLocalSearchParams(); // Pega o ID da URL
+  const { id } = useLocalSearchParams();
   const router = useRouter();
   
   const [salePrice, setSalePrice] = useState<string>('');
   
-  // Buscar dados do produto
   const { data: product, error: productError, isLoading: productLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: () => fetchProductById(id as string),
   });
 
-  // Buscar o preço médio
   const { data: avgPrice, error: avgError, isLoading: avgLoading } = useQuery({
     queryKey: ['averagePrice', id],
     queryFn: () => fetchAveragePrice(id as string),
   });
 
-  // Buscar o preço sugerido
   const { data: suggestedPrice, error: suggestedError, isLoading: suggestedLoading } = useQuery({
     queryKey: ['suggestedPrice', id],
     queryFn: () => fetchSuggestedPrice(id as string),
   });
 
-  // Mutação para atualizar o preço de venda
   const mutation = useMutation({
     mutationFn: updateProductSalePrice,
     onSuccess: () => {
@@ -87,7 +88,6 @@ export default function ProductEdit() {
   if (productLoading || avgLoading || suggestedLoading) return <Text>Loading...</Text>;
   if (productError || avgError || suggestedError) return <Text>Error: {productError?.message || avgError?.message || suggestedError?.message}</Text>;
 
-  // Calculo do preço sugerido: usar o preço sugerido da tabela ou aplicar a lógica de 120%
   const calculatedSuggestedPrice = suggestedPrice !== null 
     ? suggestedPrice 
     : avgPrice !== null 
@@ -99,13 +99,19 @@ export default function ProductEdit() {
       <Text style={{ marginBottom: 5, fontSize: 12 }}>{product.product_code}</Text>
       <Text style={{ marginBottom: 10, fontSize: 18 }}>{product.product_name}</Text>
 
-      <Text style={{fontSize: 16}}>Preço atual de venda: R$ {(product.sale_price || 0).toFixed(2)}</Text>
+      <Text style={{ fontSize: 16 }}>Preço atual de venda: R$ {(product.sale_price || 0).toFixed(2)}</Text>
       
       {avgPrice !== null && (
         <View style={{ marginVertical: 10 }}>
-          <Text style={{fontSize: 12, color: Colors.light.icon}}>Preço médio de compra: R$ {avgPrice.toFixed(2)}</Text>
+          <Text style={{fontSize: 12, color: Colors.light.icon}}>
+            Preço médio de compra: R$ {avgPrice.toFixed(2)}
+          </Text>
           <Text style={{fontSize: 12, color: Colors.light.tabIconSelected}}>
-            Preço de venda sugerido: R$ {calculatedSuggestedPrice.toFixed(2)}
+            Preço de venda sugerido (
+            {suggestedPrice === null 
+              ? '120%' 
+              : `${(((suggestedPrice - avgPrice) / avgPrice) * 100).toFixed(0)}%`}
+            de lucro): R$ {suggestedPrice !== null ? suggestedPrice.toFixed(2) : (avgPrice * 2.2).toFixed(2)}
           </Text>
         </View>
       )}
@@ -119,7 +125,7 @@ export default function ProductEdit() {
       />
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 50 }}>
-        <Button onPress={() => router.navigate('/(tabs)/products')} action="negative" variant="link">
+        <Button onPress={router.back} action="negative" variant="link">
           <ButtonText>Cancelar</ButtonText>
         </Button>
         <Button onPress={handleUpdate} action="primary" variant="solid">
