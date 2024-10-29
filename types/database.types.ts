@@ -170,6 +170,24 @@ export type Database = {
         }
         Relationships: []
       }
+      suggested_prices: {
+        Row: {
+          highlighted: boolean
+          price: number
+          product_code: string
+        }
+        Insert: {
+          highlighted: boolean
+          price: number
+          product_code: string
+        }
+        Update: {
+          highlighted?: boolean
+          price?: number
+          product_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

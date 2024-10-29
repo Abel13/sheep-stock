@@ -20,3 +20,12 @@ expo-env.d.ts
 # @end expo-cli
 
 .env
+
+# platforms
+ios
+android
+
+#files
+*.ipa
+*.apk
+*.aab

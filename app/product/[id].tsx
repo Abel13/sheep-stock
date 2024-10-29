@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { supabase } from '@/services/supabaseClient'; // Importando o Supabase Client do caminho correto
+import { supabase } from '@/services/supabaseClient';
 import { View, Text, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
@@ -22,6 +22,13 @@ const fetchAveragePrice = async (productId: string) => {
   return data || 0; // Retorna 0 se não houver dados
 };
 
+// Função para buscar o preço sugerido
+const fetchSuggestedPrice = async (productId: string) => {
+  const { data, error } = await supabase.from('suggested_price').select('price').eq('product_code', productId).single();
+  if (error) throw new Error(error.message);
+  return data ? data.price : null;
+};
+
 // Função para atualizar o preço de venda do produto
 const updateProductSalePrice = async ({ productId, salePrice }: { productId: string; salePrice: number }) => {
   const { error } = await supabase.from('products').update({ sale_price: salePrice }).eq('product_code', productId);
@@ -32,7 +39,6 @@ export default function ProductEdit() {
   const { id } = useLocalSearchParams(); // Pega o ID da URL
   const router = useRouter();
   
-  // Estado local para o preço de venda e o preço médio
   const [salePrice, setSalePrice] = useState<string>('');
   
   // Buscar dados do produto
@@ -47,27 +53,46 @@ export default function ProductEdit() {
     queryFn: () => fetchAveragePrice(id as string),
   });
 
+  // Buscar o preço sugerido
+  const { data: suggestedPrice, error: suggestedError, isLoading: suggestedLoading } = useQuery({
+    queryKey: ['suggestedPrice', id],
+    queryFn: () => fetchSuggestedPrice(id as string),
+  });
+
   // Mutação para atualizar o preço de venda
   const mutation = useMutation({
     mutationFn: updateProductSalePrice,
     onSuccess: () => {
-      Alert.alert('Success', 'Sale price updated successfully!', [
+      Alert.alert('Sucesso', 'Preço de venda atualizado com sucesso!', [
         { text: 'OK', onPress: () => router.push('/products') },
       ]);
     },
   });
 
+  const handleChange = (text: string) => {
+    const formattedText = text.replace(',', '.').replace(/[^0-9.]/g, '');
+    setSalePrice(formattedText);
+  };
+
   const handleUpdate = () => {
     const parsedPrice = parseFloat(salePrice);
+
     if (isNaN(parsedPrice)) {
-      Alert.alert('Invalid Input', 'Please enter a valid number for the sale price.');
+      Alert.alert('Entrada inválida', 'Insira um número válido para o preço de venda.');
       return;
     }
     mutation.mutate({ productId: id as string, salePrice: parsedPrice });
   };
 
-  if (productLoading || avgLoading) return <Text>Loading...</Text>;
-  if (productError || avgError) return <Text>Error: {productError?.message || avgError?.message}</Text>;
+  if (productLoading || avgLoading || suggestedLoading) return <Text>Loading...</Text>;
+  if (productError || avgError || suggestedError) return <Text>Error: {productError?.message || avgError?.message || suggestedError?.message}</Text>;
+
+  // Calculo do preço sugerido: usar o preço sugerido da tabela ou aplicar a lógica de 120%
+  const calculatedSuggestedPrice = suggestedPrice !== null 
+    ? suggestedPrice 
+    : avgPrice !== null 
+      ? avgPrice * 2.2 // 120% de lucro
+      : 0;
 
   return (
     <View style={{ flex: 1, padding: 20, backgroundColor: Colors.light.background }}>
@@ -79,14 +104,16 @@ export default function ProductEdit() {
       {avgPrice !== null && (
         <View style={{ marginVertical: 10 }}>
           <Text style={{fontSize: 12, color: Colors.light.icon}}>Preço médio de compra: R$ {avgPrice.toFixed(2)}</Text>
-          <Text style={{fontSize: 12, color: Colors.light.tabIconSelected}}>Preço de venda sugerido (90% de lucro): R$ {(avgPrice + avgPrice * 0.9).toFixed(2)}</Text>
+          <Text style={{fontSize: 12, color: Colors.light.tabIconSelected}}>
+            Preço de venda sugerido: R$ {calculatedSuggestedPrice.toFixed(2)}
+          </Text>
         </View>
       )}
       
       <TextInput
         placeholder="Insira o novo preço"
         value={salePrice}
-        onChangeText={setSalePrice}
+        onChangeText={handleChange}
         keyboardType="numeric"
         style={{ borderWidth: 1, borderColor: Colors.light.icon, padding: 10, marginVertical: 20 }}
       />

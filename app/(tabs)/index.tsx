@@ -6,23 +6,24 @@ import { Product } from '@/types/Product';
 import { Colors } from '@/constants/Colors';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 
-// Função para buscar produtos com base no termo de busca
 const fetchProducts = async (search: string) => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .ilike('product_name', `%${search}%`);
-  if (error) throw new Error(error.message);
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .ilike('product_name', `%${search}%`);
+    if (error) throw new Error(error.message);
+    return data;
+  } catch (error) {
+    return []
+  }
 };
 
-// Função para criar uma venda no Supabase
 const createSale = async ({ saleData, saleProducts }: { saleData: any; saleProducts: any[] }) => {
   const { data, error } = await supabase.from('sales').insert([saleData]).select();
   if (error) throw new Error(error.message);
   const saleId = data[0].id;
 
-  // Inserir produtos da venda na tabela sale_products
   const productsData = saleProducts.map((product) => ({
     sale_id: saleId,
     product_code: product.product_code,
@@ -36,18 +37,15 @@ export default function SaleScreen() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
-  // Buscar produtos conforme o termo de busca é atualizado
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', search],
     queryFn: () => fetchProducts(search),
     enabled: !!search,
   });
 
-  // Adicionar produto com quantidade inicial 1 na lista
   const handleAddProduct = (product: Product) => {
     const productExists = selectedProducts.find((p) => p.product_code === product.product_code);
 
@@ -56,11 +54,10 @@ export default function SaleScreen() {
       setSelectedProducts((prev) => [...prev, productToAdd]);
     }
 
-    setSearch(''); // Limpar busca
-    setShowSearchResults(false); // Ocultar resultados de busca
+    setSearch('');
+    setShowSearchResults(false);
   };
 
-  // Incrementa a quantidade do produto selecionado
   const incrementQuantity = (productCode: string) => {
     setSelectedProducts((prev) =>
       prev.map((product) =>
@@ -71,7 +68,7 @@ export default function SaleScreen() {
     );
   };
 
-  // Decrementa a quantidade do produto selecionado
+  
   const decrementQuantity = (productCode: string) => {
     setSelectedProducts((prev) =>
       prev
@@ -80,7 +77,7 @@ export default function SaleScreen() {
             ? { ...product, quantity: product.quantity - 1 }
             : product
         )
-        .filter((product) => product.quantity > 0) // Remove o produto se a quantidade for zero
+        .filter((product) => product.quantity > 0)
     );
   };
 
@@ -95,7 +92,6 @@ export default function SaleScreen() {
     },
   });
 
-  // Finalizar a venda
   const handleFinalizeSale = () => {
     const saleData = { total_amount: totalAmount };
     mutation.mutate({ saleData, saleProducts: selectedProducts });
@@ -103,7 +99,6 @@ export default function SaleScreen() {
 
   return (
     <View style={{ padding: 20, backgroundColor: Colors.light.background, flex: 1 }}>
-      {/* Campo de busca de produto */}
       <TextInput
         placeholder="Buscar produto por nome"
         value={search}
@@ -114,7 +109,6 @@ export default function SaleScreen() {
         style={{ borderBottomWidth: 1, padding: 10, marginBottom: 20 }}
       />
 
-      {/* Lista de produtos para selecionar com estilo flutuante */}
       {showSearchResults && search && (
         <View
           style={{
@@ -151,7 +145,6 @@ export default function SaleScreen() {
         </View>
       )}
 
-      {/* Lista de produtos selecionados com botões de + e - */}
       <Text style={{ marginTop: 20, fontSize: 18 }}>Produtos:</Text>
       <FlatList
         data={selectedProducts}
@@ -176,7 +169,6 @@ export default function SaleScreen() {
         )}
       />
 
-      {/* Exibir o valor total */}
       <Text style={{
         fontSize: 20,
         marginTop: 20,
@@ -187,7 +179,6 @@ export default function SaleScreen() {
         color: Colors.dark.text
       }}>Total: R$ {totalAmount.toFixed(2)}</Text>
 
-      {/* Botão para finalizar a venda */}
       <Button onPress={handleFinalizeSale}>
         <ButtonText>Finalizar Venda</ButtonText>
       </Button>
