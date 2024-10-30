@@ -1,45 +1,55 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, FlatList, TextInput, Pressable } from 'react-native';
+import { View, Text, SectionList, TextInput, Pressable } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 
-const fetchSales = async (search) => {
+const fetchSales = async () => {
   let query = supabase.from('sales').select('*').order('sale_date', { ascending: false });
-  if (search) {
-    query = query.or(`id.ilike.%${search}%`);
-  }
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data;
 };
 
+// Função para agrupar vendas por data
+const groupSalesByDate = (sales) => {
+  const groupedSales = sales.reduce((acc, sale) => {
+    const saleDate = new Date(sale.sale_date).toLocaleDateString();
+    if (!acc[saleDate]) {
+      acc[saleDate] = [];
+    }
+    acc[saleDate].push(sale);
+    return acc;
+  }, {});
+
+  return Object.keys(groupedSales).map((date) => ({
+    title: date,
+    data: groupedSales[date],
+  }));
+};
+
 export default function Sales() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
 
   const { data: sales, error, isLoading } = useQuery({
-    queryKey: ['sales', search],
-    queryFn: () => fetchSales(search),
+    queryKey: ['sales'],
+    queryFn: () => fetchSales(),
   });
 
-  if (isLoading && !search) return <Text>Loading...</Text>;
+  if (isLoading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;
+
+  const groupedSales = groupSalesByDate(sales || []);
 
   return (
     <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 10, backgroundColor: Colors.light.background }}>
-      <TextInput
-        placeholder="Procure vendas por ID"
-        value={search}
-        onChangeText={setSearch}
-        style={{ borderBottomWidth: 1, marginBottom: 20, padding: 8 }}
-      />
-
-      <FlatList
-        data={sales}
+      <SectionList
+        sections={groupedSales}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={{ fontSize: 16, color: Colors.light.tint, fontWeight: 'bold', paddingVertical: 10, backgroundColor: Colors.light.background }}>{title}</Text>
+        )}
         renderItem={({ item }) => (
           <Pressable
             onPress={() => router.push({
@@ -57,6 +67,7 @@ export default function Sales() {
               borderWidth: 1,
               borderColor: Colors.light.icon,
               borderRadius: 7,
+              marginBottom: 5,
             }}
           >
             <View style={{ flex: 1 }}>

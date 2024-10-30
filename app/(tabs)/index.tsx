@@ -12,11 +12,11 @@ const fetchProducts = async (search: string) => {
       .from('products')
       .select('*')
       .neq('stock_quantity', 0)
-      .ilike('product_name', `%${search}%`);
+      .or(`product_name.ilike.%${search}%,product_code.ilike.%${search}%`);
     if (error) throw new Error(error.message);
     return data;
   } catch (error) {
-    return []
+    return [];
   }
 };
 
@@ -101,7 +101,7 @@ export default function SaleScreen() {
   return (
     <View style={{ padding: 20, backgroundColor: Colors.light.background, flex: 1 }}>
       <TextInput
-        placeholder="Buscar produto por nome"
+        placeholder="Buscar produto por nome ou código"
         value={search}
         onChangeText={(text) => {
           setSearch(text);
@@ -136,9 +136,12 @@ export default function SaleScreen() {
                   onPress={() => handleAddProduct(item)}
                   style={{ padding: 10, borderBottomWidth: 1, borderColor: Colors.light.icon }}
                 >
+                  <Text style={{fontSize: 10, color: Colors.light.icon}}>{item.product_code}</Text>
                   <Text>{item.product_name}</Text>
-                  <Text>R$ {(item.sale_price || 0).toFixed(2)}</Text>
-                  <Text>Estoque: {item.stock_quantity}</Text>
+                  <View style={{flexDirection: 'row', marginTop: 10, justifyContent: 'space-between', alignItems: 'flex-end'}}>
+                    <Text style={{fontSize: 16}}>R$ {(item.sale_price || 0).toFixed(2)}</Text>
+                    <Text style={{color: Colors.light.icon}}>Estoque: {item.stock_quantity}</Text>
+                  </View>
                 </Pressable>
               )}
             />
