@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
 import { Colors } from '@/constants/Colors';
+import { useRouter } from 'expo-router';
 
 const fetchLowStockProducts = async () => {
   const { data, error } = await supabase.rpc('fetch_low_stock_products');
@@ -11,6 +12,7 @@ const fetchLowStockProducts = async () => {
 };
 
 export default function LowStockScreen() {
+  const router = useRouter();
   const { data: products, error, isLoading } = useQuery({
     queryKey: ['lowStockProducts'],
     queryFn: fetchLowStockProducts,
@@ -21,16 +23,28 @@ export default function LowStockScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Produtos com Estoque Baixo</Text>
       <FlatList
         data={products}
         keyExtractor={(item) => item.product_code}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        getItemLayout={(data, index) => (
+          { length: 80, offset: 80 * index, index }
+        )}
         renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
+          <Pressable style={styles.itemContainer} onPress={() => {
+            router.push({
+              pathname: '/(tabs)/products/[id]',
+              params: {
+                id: item.product_code
+              }
+            })
+          }}>
             <Text style={styles.productName}>{item.product_name}</Text>
             <Text style={styles.stockInfo}>Estoque atual: {item.stock_quantity}</Text>
             <Text style={styles.stockInfo}>Estoque mínimo: {item.min_stock_quantity}</Text>
-          </View>
+          </Pressable>
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />

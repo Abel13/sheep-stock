@@ -1,10 +1,9 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/services/supabaseClient'; // Importando o Supabase Client do caminho correto
-import { View, Text, FlatList, TextInput, Alert, Pressable } from 'react-native';
+import { useState, memo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/services/supabaseClient';
+import { View, Text, FlatList, TextInput, Pressable } from 'react-native';
 import { Product } from '@/types/Product';
 import { Colors } from '@/constants/Colors';
-import { Center } from '@/components/ui/center';
 import { useRouter } from 'expo-router';
 
 const fetchProducts = async (search: string) => {
@@ -17,8 +16,36 @@ const fetchProducts = async (search: string) => {
   return data;
 };
 
+// Componente de item para a lista, otimizado com React.memo
+const ProductItem = memo(({ item, onPress }) => (
+  <Pressable
+    onPress={() => onPress(item.product_code)}
+    style={{
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+      borderWidth: 1,
+      borderColor: Colors.light.icon,
+      borderRadius: 7,
+    }}
+  >
+    <View style={{ flex: 1 }}>
+      <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>{item.product_code}</Text>
+      <Text>{item.product_name}</Text>
+      <View style={{marginTop: 10}}>
+        <Text>Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}</Text>
+      </View>
+    </View>
+    <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
+      <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>ESTOQUE</Text>
+      <Text style={{fontSize: 30}}>{item.stock_quantity}</Text>
+    </View>
+  </Pressable>
+));
+
 export default function Products() {
-  const queryClient = useQueryClient();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
@@ -27,11 +54,18 @@ export default function Products() {
     queryFn: () => fetchProducts(search),
   });
 
+  const handlePress = (productCode: string) => {
+    router.push({
+      pathname: `/products/[id]`,
+      params: { id: productCode }
+    });
+  };
+
   if (isLoading && !search) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;
 
   return (
-    <View style={{ flex:1, paddingHorizontal: 20, paddingTop: 10, backgroundColor: Colors.light.background }}>
+    <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 10, backgroundColor: Colors.light.background }}>
       <TextInput
         placeholder="Procure itens por nome ou código"
         value={search}
@@ -42,39 +76,15 @@ export default function Products() {
       <FlatList
         data={products}
         keyExtractor={(item: Product) => item.product_code}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        getItemLayout={(data, index) => (
+          { length: 80, offset: 80 * index, index }
+        )}
         ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
         renderItem={({ item }) => (
-          <Pressable
-            onPress={() => router.push({
-              pathname: `/products/[id]`,
-              params: {
-                  id: item.product_code
-                }
-              })
-            }
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingVertical: 10,
-              paddingHorizontal: 10,
-              borderWidth: 1,
-              borderColor: Colors.light.icon,
-              borderRadius: 7,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>{item.product_code}</Text>
-              <Text>{item.product_name}</Text>
-              <View style={{marginTop: 10}}>
-                <Text>Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}</Text>
-              </View>
-            </View>
-            <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
-              <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>ESTOQUE</Text>
-              <Text style={{fontSize: 30}}>{item.stock_quantity}</Text>
-            </View>
-          </Pressable>
+          <ProductItem item={item} onPress={handlePress} />
         )}
       />
     </View>
