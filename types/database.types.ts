@@ -49,6 +49,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          cnpj: string | null
           discount: number | null
           icms: number | null
           icms_st: number | null
@@ -56,12 +57,14 @@ export type Database = {
           ipi: number | null
           purchase_date: string | null
           shipping_cost: number | null
+          supplier: string | null
           total_items: number | null
           total_products_value: number | null
           total_value: number | null
           total_weight: number | null
         }
         Insert: {
+          cnpj?: string | null
           discount?: number | null
           icms?: number | null
           icms_st?: number | null
@@ -69,12 +72,14 @@ export type Database = {
           ipi?: number | null
           purchase_date?: string | null
           shipping_cost?: number | null
+          supplier?: string | null
           total_items?: number | null
           total_products_value?: number | null
           total_value?: number | null
           total_weight?: number | null
         }
         Update: {
+          cnpj?: string | null
           discount?: number | null
           icms?: number | null
           icms_st?: number | null
@@ -82,6 +87,7 @@ export type Database = {
           ipi?: number | null
           purchase_date?: string | null
           shipping_cost?: number | null
+          supplier?: string | null
           total_items?: number | null
           total_products_value?: number | null
           total_value?: number | null
@@ -91,18 +97,24 @@ export type Database = {
       }
       products: {
         Row: {
+          average_cost: number | null
+          min_stock_quantity: number | null
           product_code: string
           product_name: string | null
           sale_price: number | null
           stock_quantity: number | null
         }
         Insert: {
+          average_cost?: number | null
+          min_stock_quantity?: number | null
           product_code: string
           product_name?: string | null
           sale_price?: number | null
           stock_quantity?: number | null
         }
         Update: {
+          average_cost?: number | null
+          min_stock_quantity?: number | null
           product_code?: string
           product_name?: string | null
           sale_price?: number | null
