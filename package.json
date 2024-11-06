@@ -15,6 +15,7 @@
     "format": "prettier --write ."
   },
   "jest": {
+    "maxWorkers": 2,
     "preset": "jest-expo"
   },
   "dependencies": {

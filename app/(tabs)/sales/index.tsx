@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, SectionList, TextInput, Pressable } from 'react-native';
+import { View, Text, SectionList, Pressable } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 
@@ -12,20 +12,22 @@ const fetchSales = async () => {
   return data;
 };
 
-// Função para agrupar vendas por data
+// Função para agrupar vendas por data e calcular o total de vendas do dia
 const groupSalesByDate = (sales) => {
   const groupedSales = sales.reduce((acc, sale) => {
     const saleDate = new Date(sale.sale_date).toLocaleDateString();
     if (!acc[saleDate]) {
-      acc[saleDate] = [];
+      acc[saleDate] = { totalAmount: 0, sales: [] };
     }
-    acc[saleDate].push(sale);
+    acc[saleDate].totalAmount += sale.total_amount || 0;
+    acc[saleDate].sales.push(sale);
     return acc;
   }, {});
 
   return Object.keys(groupedSales).map((date) => ({
     title: date,
-    data: groupedSales[date],
+    totalAmount: groupedSales[date].totalAmount,
+    data: groupedSales[date].sales,
   }));
 };
 
@@ -47,8 +49,11 @@ export default function Sales() {
       <SectionList
         sections={groupedSales}
         keyExtractor={(item) => item.id}
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={{ fontSize: 16, color: Colors.light.tint, fontWeight: 'bold', paddingVertical: 10, backgroundColor: Colors.light.background }}>{title}</Text>
+        renderSectionHeader={({ section: { title, totalAmount } }) => (
+          <View style={{ paddingVertical: 10, backgroundColor: Colors.light.background }}>
+            <Text style={{ fontSize: 16, color: Colors.light.tint, fontWeight: 'bold' }}>{title}</Text>
+            <Text style={{ fontSize: 14, color: Colors.light.icon }}>Total de Vendas: R$ {totalAmount.toFixed(2)}</Text>
+          </View>
         )}
         renderItem={({ item }) => (
           <Pressable
