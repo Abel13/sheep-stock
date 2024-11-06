@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, TextInput, Alert } from 'react-native';
+import { View, Text, TextInput, Alert, Switch } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -25,18 +25,18 @@ const fetchAveragePrice = async (productId: string) => {
 // Função para buscar o preço sugerido
 const fetchSuggestedPrice = async (productId: string) => {
   const { data, error } = await supabase
-    .from('suggested_prices') // Verifique se o nome da tabela está correto aqui
+    .from('suggested_prices')
     .select('price')
     .eq('product_code', productId)
-    .maybeSingle(); // Usa maybeSingle para evitar erro de múltiplas ou nenhuma linha encontrada
+    .maybeSingle();
   
   if (error) throw new Error(error.message);
-  return data?.price || null; // Retorna null caso não haja preço sugerido
+  return data?.price || null;
 };
 
-// Função para atualizar o preço de venda do produto
-const updateProductSalePrice = async ({ productId, salePrice }: { productId: string; salePrice: number }) => {
-  const { error } = await supabase.from('products').update({ sale_price: salePrice }).eq('product_code', productId);
+// Função para atualizar os dados do produto
+const updateProductDetails = async ({ productId, salePrice, minimumStock, discontinued }: { productId: string; salePrice: number; minimumStock: number; discontinued: boolean }) => {
+  const { error } = await supabase.from('products').update({ sale_price: salePrice, minimum_stock: minimumStock, discontinued }).eq('product_code', productId);
   if (error) throw new Error(error.message);
 };
 
@@ -45,7 +45,9 @@ export default function ProductEdit() {
   const router = useRouter();
   
   const [salePrice, setSalePrice] = useState<string>('');
-  
+  const [minimumStock, setMinimumStock] = useState<string>('');
+  const [discontinued, setDiscontinued] = useState<boolean>(false);
+
   const { data: product, error: productError, isLoading: productLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: () => fetchProductById(id as string),
@@ -62,37 +64,35 @@ export default function ProductEdit() {
   });
 
   const mutation = useMutation({
-    mutationFn: updateProductSalePrice,
+    mutationFn: updateProductDetails,
     onSuccess: () => {
-      Alert.alert('Sucesso', 'Preço de venda atualizado com sucesso!', [
-        { text: 'OK', onPress: () => router.push('/products') },
+      Alert.alert('Sucesso', 'Detalhes do produto atualizados com sucesso!', [
+        { text: 'OK', onPress: () => router.back() },
       ]);
     },
   });
 
-  const handleChange = (text: string) => {
-    const formattedText = text.replace(',', '.').replace(/[^0-9.]/g, '');
-    setSalePrice(formattedText);
-  };
-
   const handleUpdate = () => {
     const parsedPrice = parseFloat(salePrice);
+    const parsedMinimumStock = parseInt(minimumStock);
 
-    if (isNaN(parsedPrice)) {
-      Alert.alert('Entrada inválida', 'Insira um número válido para o preço de venda.');
+    if (isNaN(parsedPrice) || isNaN(parsedMinimumStock)) {
+      Alert.alert('Entrada inválida', 'Insira valores válidos para o preço e quantidade mínima.');
       return;
     }
-    mutation.mutate({ productId: id as string, salePrice: parsedPrice });
+    mutation.mutate({ productId: id as string, salePrice: parsedPrice, minimumStock: parsedMinimumStock, discontinued });
   };
+
+  useEffect(() => {
+    if (product) {
+      setSalePrice(product.sale_price?.toString() || '');
+      setMinimumStock(product.minimum_stock?.toString() || '');
+      setDiscontinued(product.discontinued || false);
+    }
+  }, [product]);
 
   if (productLoading || avgLoading || suggestedLoading) return <Text>Loading...</Text>;
   if (productError || avgError || suggestedError) return <Text>Error: {productError?.message || avgError?.message || suggestedError?.message}</Text>;
-
-  const calculatedSuggestedPrice = suggestedPrice !== null 
-    ? suggestedPrice 
-    : avgPrice !== null 
-      ? avgPrice * 2.2 // 120% de lucro
-      : 0;
 
   return (
     <View style={{ flex: 1, padding: 20, backgroundColor: Colors.light.background }}>
@@ -116,18 +116,39 @@ export default function ProductEdit() {
         </View>
       )}
       
-      <TextInput
-        placeholder="Insira o novo preço"
-        value={salePrice}
-        onChangeText={handleChange}
-        keyboardType="numeric"
-        style={{ borderWidth: 1, borderColor: Colors.light.icon, padding: 10, marginVertical: 20 }}
-      />
+      <View style={{ marginVertical: 20, gap: 10 }}>
+        <View>
+          <Text style={{color: Colors.light.icon}}>Preço de venda</Text>
+          <TextInput
+            placeholder="Insira o novo preço"
+            value={salePrice}
+            onChangeText={(text) => setSalePrice(text.replace(',', '.').replace(/[^0-9.]/g, ''))}
+            keyboardType="numeric"
+            style={{ borderWidth: 1, borderColor: Colors.light.icon, padding: 10}}
+          />
+        </View>
+
+        <View>
+          <Text style={{color: Colors.light.icon}}>Quantidade mínima</Text>
+          <TextInput
+            placeholder="Quantidade mínima de estoque"
+            value={minimumStock}
+            onChangeText={(text) => setMinimumStock(text.replace(/[^0-9]/g, ''))}
+            keyboardType="numeric"
+            style={{ borderWidth: 1, borderColor: Colors.light.icon, padding: 10 }}
+          />
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+          <Switch
+            value={discontinued}
+            onValueChange={setDiscontinued}
+          />
+          <Text style={{ color: Colors.light.icon, marginLeft: 10 }}>Produto descontinuado</Text>
+        </View>
+      </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 50 }}>
-        <Button onPress={router.back} action="negative" variant="link">
-          <ButtonText>Cancelar</ButtonText>
-        </Button>
         <Button onPress={handleUpdate} action="primary" variant="solid">
           <ButtonText>Salvar</ButtonText>
         </Button>
