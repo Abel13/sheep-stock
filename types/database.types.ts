@@ -98,7 +98,10 @@ export type Database = {
       products: {
         Row: {
           average_cost: number | null
+          discontinued: boolean | null
+          image_url: string | null
           min_stock_quantity: number | null
+          minimum_stock: number | null
           product_code: string
           product_name: string | null
           sale_price: number | null
@@ -106,7 +109,10 @@ export type Database = {
         }
         Insert: {
           average_cost?: number | null
+          discontinued?: boolean | null
+          image_url?: string | null
           min_stock_quantity?: number | null
+          minimum_stock?: number | null
           product_code: string
           product_name?: string | null
           sale_price?: number | null
@@ -114,7 +120,10 @@ export type Database = {
         }
         Update: {
           average_cost?: number | null
+          discontinued?: boolean | null
+          image_url?: string | null
           min_stock_quantity?: number | null
+          minimum_stock?: number | null
           product_code?: string
           product_name?: string | null
           sale_price?: number | null
@@ -210,6 +219,15 @@ export type Database = {
           product_code_input: string
         }
         Returns: number
+      }
+      fetch_low_stock_products: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          product_code: string
+          product_name: string
+          stock_quantity: number
+          minimum_stock: number
+        }[]
       }
     }
     Enums: {

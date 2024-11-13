@@ -14,7 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.abelb13.sheepstock"
+      "bundleIdentifier": "com.abelb13.sheepstock",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Este aplicativo requer acesso à biblioteca de fotos para permitir o upload de imagens.",
+        "NSCameraUsageDescription": "Este aplicativo requer acesso à câmera para capturar fotos diretamente."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +37,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-router"
+      "expo-router",
+      [ 
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
