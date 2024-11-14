@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, SectionList, Pressable } from 'react-native';
-import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
+import { SectionList } from 'react-native';
+import {
+  YStack,
+  XStack,
+  Text,
+  Card,
+  Separator,
+  Spacer,
+} from 'tamagui';
+import { Sale } from '@/types/Sale';
 
+// Função para buscar vendas
 const fetchSales = async () => {
   let query = supabase.from('sales').select('*').order('sale_date', { ascending: false });
   const { data, error } = await query;
@@ -39,56 +48,51 @@ export default function Sales() {
     queryFn: () => fetchSales(),
   });
 
-  if (isLoading) return <Text>Loading...</Text>;
-  if (error) return <Text>Error: {error.message}</Text>;
+  if (isLoading) return <YStack padding="$4"><Text>Loading...</Text></YStack>;
+  if (error) return <YStack padding="$4"><Text color="$red10">Error: {error.message}</Text></YStack>;
 
   const groupedSales = groupSalesByDate(sales || []);
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 10, backgroundColor: Colors.light.background }}>
+    <YStack flex={1} paddingHorizontal="$4" paddingTop="$2" backgroundColor="$background">
       <SectionList
         sections={groupedSales}
-        keyExtractor={(item) => item.id}
-        renderSectionHeader={({ section: { title, totalAmount } }) => (
-          <View style={{ paddingVertical: 10, backgroundColor: Colors.light.background }}>
-            <Text style={{ fontSize: 16, color: Colors.light.tint, fontWeight: 'bold' }}>{title}</Text>
-            <Text style={{ fontSize: 14, color: Colors.light.icon }}>Total de Vendas: R$ {totalAmount.toFixed(2)}</Text>
-          </View>
+        keyExtractor={(item) => item.id.toString()}
+        renderSectionHeader={({ section: { title } }) => (
+          <YStack paddingVertical="$3" backgroundColor={'$background'}>
+            <Text fontSize="$4" fontWeight="bold" color="$color10">{title}</Text>
+          </YStack>
         )}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => router.push({
-              pathname: '/(tabs)/sales/[id]',
-              params: {
-                id: item.id
-              }
-            })}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingVertical: 10,
-              paddingHorizontal: 10,
-              borderWidth: 1,
-              borderColor: Colors.light.icon,
-              borderRadius: 7,
-              marginBottom: 5,
-            }}
+        renderSectionFooter={({ section: { totalAmount } }) => (
+          <YStack paddingVertical="$3">
+            <Text fontSize="$4" color="$gray10Dark" textAlign='right' paddingInline='$2'>Total: R$ {totalAmount.toFixed(2)}</Text>
+            <Separator borderColor="$borderColor" marginTop='$2'/>
+          </YStack>
+        )}
+        renderItem={({ item }: { item: Sale }) => (
+          <Card
+            onPress={() => router.push({ pathname: '/(tabs)/sales/[id]', params: { id: item.id } })}
+            padding="$3"
+            bordered
+            radiused
+            hoverTheme
+            pressTheme
           >
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: Colors.light.icon, fontSize: 10, marginBottom: 5 }}>ID: {item.id}</Text>
-              <Text>Data: {new Date(item.sale_date).toLocaleDateString()}</Text>
-              <View style={{ marginTop: 10 }}>
-                <Text>Total: R$ {(item.total_amount || 0).toFixed(2)}</Text>
-              </View>
-            </View>
-            <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
-              <Text style={{ color: Colors.light.icon, fontSize: 10, marginBottom: 5 }}>TOTAL</Text>
-              <Text style={{ fontSize: 20 }}>R$ {item.total_amount.toFixed(2)}</Text>
-            </View>
-          </Pressable>
+            <Text fontSize={8} color="$gray10Dark" marginBottom="$1">ID: {item.id}</Text>
+            <XStack alignItems="center">
+              <YStack flex={1}>
+                <Text fontSize={16}>{item.customer_name}</Text>
+                <Text fontSize={12}>{new Date(item.sale_date!).toLocaleDateString()}</Text>
+              </YStack>
+              <YStack alignItems="flex-end">
+                <Text fontSize={12} color="$colorSubtle">TOTAL</Text>
+                <Text fontSize="$4">R$ {item.total_amount.toFixed(2)}</Text>
+              </YStack>
+            </XStack>
+          </Card>
         )}
+        ItemSeparatorComponent={() => <Spacer size="$1" />}
       />
-    </View>
+    </YStack>
   );
 }

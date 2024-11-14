@@ -175,16 +175,19 @@ export type Database = {
       }
       sales: {
         Row: {
+          customer_name: string | null
           id: string
           sale_date: string | null
           total_amount: number
         }
         Insert: {
+          customer_name?: string | null
           id?: string
           sale_date?: string | null
           total_amount: number
         }
         Update: {
+          customer_name?: string | null
           id?: string
           sale_date?: string | null
           total_amount?: number

@@ -1,11 +1,20 @@
 import { useState, memo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, FlatList, TextInput, Pressable } from 'react-native';
+import { FlatList } from 'react-native';
 import { Product } from '@/types/Product';
-import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
+import {
+  YStack,
+  XStack,
+  Text,
+  Button,
+  Card,
+  Spacer,
+  Input,
+} from 'tamagui';
 
+// Função para buscar produtos
 const fetchProducts = async (search: string) => {
   let query = supabase.from('products').select('*').order('product_name');
   if (search) {
@@ -17,32 +26,40 @@ const fetchProducts = async (search: string) => {
 };
 
 // Componente de item para a lista, otimizado com React.memo
-const ProductItem = memo(({ item, onPress }) => (
-  <Pressable
+const ProductItem = memo(({ item, onPress }: { item: Product, onPress: (code: string) => void }) => (
+  <Card
     onPress={() => onPress(item.product_code)}
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 10,
-      borderWidth: 1,
-      borderColor: Colors.light.icon,
-      borderRadius: 7,
-    }}
+    padding="$3"
+    bordered
+    borderRadius="$4"
+    backgroundColor="$background"
+    hoverTheme
+    pressTheme
   >
-    <View style={{ flex: 1 }}>
-      <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>{item.product_code}</Text>
-      <Text>{item.product_name}</Text>
-      <View style={{marginTop: 10}}>
-        <Text>Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}</Text>
-      </View>
-    </View>
-    <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
-      <Text style={{color: Colors.light.icon, fontSize: 10, marginBottom: 5}}>ESTOQUE</Text>
-      <Text style={{fontSize: 30}}>{item.stock_quantity}</Text>
-    </View>
-  </Pressable>
+    <XStack>
+
+      <YStack flex={1}>
+        <Text color="$color" fontSize={8} marginBottom="$1">
+          {item.product_code}
+        </Text>
+        <Text fontSize="$3" fontWeight="500">
+          {item.product_name}
+        </Text>
+        <Text marginTop="$3" fontSize="$3">
+          Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}
+        </Text>
+      </YStack>
+      <Spacer size="$2" />
+      <YStack alignItems="center" justifyContent='center'>
+        <Text fontSize="$2" color="$color" fontWeight="300">
+          ESTOQUE
+        </Text>
+        <Text fontSize="$7">
+          {item.stock_quantity}
+        </Text>
+      </YStack>
+    </XStack>
+  </Card>
 ));
 
 export default function Products() {
@@ -61,16 +78,18 @@ export default function Products() {
     });
   };
 
-  if (isLoading && !search) return <Text>Loading...</Text>;
-  if (error) return <Text>Error: {error.message}</Text>;
+  if (isLoading && !search) return <YStack padding="$4"><Text>Loading...</Text></YStack>;
+  if (error) return <YStack padding="$4"><Text color="$red10">Error: {error.message}</Text></YStack>;
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 10, backgroundColor: Colors.light.background }}>
-      <TextInput
+    <YStack flex={1} paddingHorizontal="$4" paddingTop="$2" backgroundColor="$background">
+      <Input
         placeholder="Procure itens por nome ou código"
         value={search}
         onChangeText={setSearch}
-        style={{ borderBottomWidth: 1, marginBottom: 20, padding: 8 }}
+        borderBottomWidth="$0.5"
+        paddingVertical="$3"
+        marginBottom="$4"
       />
 
       <FlatList
@@ -79,14 +98,14 @@ export default function Products() {
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}
-        getItemLayout={(data, index) => (
-          { length: 80, offset: 80 * index, index }
-        )}
-        ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
+        getItemLayout={(data, index) => ({
+          length: 80, offset: 80 * index, index,
+        })}
+        ItemSeparatorComponent={() => <Spacer size="$2" />}
         renderItem={({ item }) => (
           <ProductItem item={item} onPress={handlePress} />
         )}
       />
-    </View>
+    </YStack>
   );
 }

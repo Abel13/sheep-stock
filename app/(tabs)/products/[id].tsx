@@ -1,14 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { View, Text, TextInput, Alert, Switch, Image } from 'react-native';
+import { Modal, useColorScheme } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors } from '@/constants/Colors';
-import { Button, ButtonText } from '@/components/ui/button';
+import { useLocalSearchParams } from 'expo-router';
 import AWS from 'aws-sdk';
 import { supabase } from '@/services/supabaseClient';
 import { Product } from '@/types/Product';
 import { Feather } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import {
+  YStack,
+  XStack,
+  Text,
+  Button,
+  Input,
+  Card,
+  Switch,
+  Image,
+  Spacer,
+  View,
+} from 'tamagui';
+import { Toast, ToastViewport, useToastController, useToastState } from '@tamagui/toast';
 
 // Configuração do S3
 AWS.config.update({
@@ -39,11 +52,13 @@ const updateProductDetails = async ({ productId, salePrice, minimumStock, discon
 export default function ProductEdit() {
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
+  const toast = useToastController();
 
   const [salePrice, setSalePrice] = useState<string>('');
-  const [minimumStock, setMinimumStock] = useState<string>('');
+  const [minimumStock, setMinimumStock] = useState<number>(0);
   const [discontinued, setDiscontinued] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const { data: product, error: productError, isLoading: productLoading } = useQuery({
     queryKey: ['product', id],
@@ -53,25 +68,21 @@ export default function ProductEdit() {
   const mutation = useMutation({
     mutationFn: updateProductDetails,
     onSuccess: () => {
-      Alert.alert('Sucesso', 'Detalhes do produto atualizados com sucesso!');
-      queryClient.invalidateQueries({
-        queryKey: ['product', id]
+      toast.show('Tudo certo!', {
+        message: 'Dados salvos com sucesso!'
       });
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
     },
   });
 
   const handleUpdate = () => {
     const parsedPrice = parseFloat(salePrice);
-    const parsedMinimumStock = parseInt(minimumStock);
-
-    if (isNaN(parsedPrice) || isNaN(parsedMinimumStock)) {
-      Alert.alert('Entrada inválida', 'Insira valores válidos para o preço e quantidade mínima.');
-      return;
-    }
+    if (isNaN(parsedPrice)) return;
+    
     mutation.mutate({
       productId: id as string,
       salePrice: parsedPrice,
-      minimumStock: parsedMinimumStock,
+      minimumStock,
       discontinued,
       imageUrl: imageUrl || ''
     });
@@ -79,54 +90,77 @@ export default function ProductEdit() {
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-        Alert.alert('Permissão necessária', 'É necessário permitir o acesso aos arquivos para enviar a imagem.');
-        return;
-    }
+    if (!permissionResult.granted) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
     });
 
     if (!result.canceled) {
-        const uri = result.assets[0].uri;
-        const response = await fetch(uri);
-        const blob = await response.blob();
+      const uri = result.assets[0].uri;
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-        // Parâmetros para o upload no S3, sem a propriedade ACL
-        const params = {
-            Bucket: 'sheep-stock', // Nome do bucket S3
-            Key: `products/${id}.jpg`, // Caminho e nome do arquivo no S3
-            Body: blob,
-            ContentType: 'image/jpeg',
-        };
+      const params = {
+        Bucket: 'sheep-stock',
+        Key: `products/${id}.jpg`,
+        Body: blob,
+        ContentType: 'image/jpeg',
+      };
 
-        try {
-            const data = await s3.upload(params).promise();
-            const publicUrl = data.Location;
-            setImageUrl(publicUrl);
+      try {
+        const data = await s3.upload(params).promise();
+        const publicUrl = data.Location;
+        setImageUrl(publicUrl);
 
-            // Atualiza a URL da imagem no banco de dados
-            mutation.mutate({
-                productId: id as string,
-                salePrice: parseFloat(salePrice),
-                minimumStock: parseInt(minimumStock),
-                discontinued,
-                imageUrl: publicUrl,
-            });
-        } catch (error) {
-            console.log('Erro ao fazer upload para S3:', error);
-            Alert.alert('Erro', 'Falha ao fazer o upload da imagem.');
-        }
+        mutation.mutate({
+          productId: id as string,
+          salePrice: parseFloat(salePrice),
+          minimumStock,
+          discontinued,
+          imageUrl: publicUrl,
+        });
+      } catch (error) {
+        console.error('Erro ao fazer upload para S3:', error);
+      }
     }
-};
+  };
+
+  const openShareDialogAsync = async () => {
+    if (product?.image_url) {
+      const fileDetails = {
+        extension: 'jpg',
+        shareOptions: {
+          mimeType: 'image/jpeg',
+          dialogTitle: 'Compartilhar imagem',
+          UTI: 'image/jpeg',
+        },
+      };
+      const downloadPath = `${FileSystem.cacheDirectory}${product.product_name}.${fileDetails.extension}`;
+      const { uri: localUrl } = await FileSystem.downloadAsync(
+        product.image_url,
+        downloadPath
+      );
+      if (!(await Sharing.isAvailableAsync())) return;
+      await Sharing.shareAsync(localUrl, fileDetails.shareOptions);
+    }
+  };
+
+
+  const incrementQuantity = () => {
+    setMinimumStock(minimumStock+1);
+  };
+
+  const decrementQuantity = () => {
+    setMinimumStock((prev) => prev > 0 ? prev - 1 : prev);
+  };
 
   useEffect(() => {
     if (product) {
       setSalePrice(product.sale_price?.toString() || '');
-      setMinimumStock(product.minimum_stock?.toString() || '');
+      setMinimumStock(product.minimum_stock || 0);
       setDiscontinued(product.discontinued || false);
       setImageUrl(product.image_url || null);
     }
@@ -136,53 +170,71 @@ export default function ProductEdit() {
   if (productError || !product) return <Text>Error: {productError?.message}</Text>;
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: Colors.light.background }}>
-      <Text style={{ marginBottom: 5, fontSize: 12 }}>{product.product_code}</Text>
-      <Text style={{ marginBottom: 10, fontSize: 18 }}>{product.product_name}</Text>
+    <YStack flex={1} padding="$4" backgroundColor="$background">
+      <Text fontSize={8}>{product.product_code}</Text>
+      <Text fontSize="$4" fontWeight="500">{product.product_name}</Text>
 
-      {imageUrl ?
-        <Image source={{ uri: imageUrl }} style={{ width: 100, height: 100, marginVertical: 10, borderRadius: 4, borderWidth: 1 }} /> :
-        <View style={{ height: 100, width: 100, borderWidth: 1, borderRadius: 4, justifyContent: 'center', alignItems: 'center', borderColor: Colors.light.tabIconDefault }}>
-          <Feather name='image' size={24} color={Colors.light.tabIconDefault}/>
-        </View>
-      }
-      <Button onPress={pickImage} variant="link">
-        <ButtonText>alterar imagem</ButtonText>
-      </Button>
+      <Card
+        onPress={() => imageUrl ? setModalVisible(true) : pickImage()}
+        width={100}
+        height={100}
+        bordered
+        pressTheme
+        justifyContent='center'
+        alignItems='center'
+        marginBlock='$2'
+      >
+        {imageUrl ? (
+          <Image source={{ uri: imageUrl }} width={100} height={100} borderRadius="$4" borderWidth={1} borderColor={'$borderColor'}/>
+        ) : (
+          <Feather name='image' size={24} />
+        )}
+      </Card>
 
-      <View style={{ marginVertical: 20, gap: 10 }}>
-        <Text style={{color: Colors.light.icon}}>Preço de venda</Text>
-        <TextInput
-          placeholder="Insira o novo preço"
-          value={salePrice}
-          onChangeText={(text) => setSalePrice(text.replace(',', '.').replace(/[^0-9.]/g, ''))}
-          keyboardType="numeric"
-          style={{ borderWidth: 1, borderColor: Colors.light.icon, padding: 10}}
-        />
-
-        <Text style={{color: Colors.light.icon}}>Quantidade mínima</Text>
-        <TextInput
-          placeholder="Quantidade mínima de estoque"
-          value={minimumStock}
-          onChangeText={(text) => setMinimumStock(text.replace(/[^0-9]/g, ''))}
-          keyboardType="numeric"
-          style={{ borderWidth: 1, borderColor: Colors.light.icon, padding: 10 }}
-        />
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-          <Switch
-            value={discontinued}
-            onValueChange={setDiscontinued}
+      <YStack marginTop="$4" gap='$4'>
+        <YStack gap='$2'>
+          <Text>Preço de venda:</Text>
+          <Input
+            placeholder="Insira o novo preço"
+            value={salePrice}
+            onChangeText={(text) => setSalePrice(text.replace(',', '.').replace(/[^0-9.]/g, ''))}
+            keyboardType="numeric"
           />
-          <Text style={{ color: Colors.light.icon, marginLeft: 10 }}>Produto descontinuado</Text>
-        </View>
-      </View>
+        </YStack>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 50 }}>
-        <Button onPress={handleUpdate} action="primary" variant="solid">
-          <ButtonText>Salvar</ButtonText>
+        <YStack gap='$2'>
+          <Text>Quantidade mínima:</Text>
+          <XStack gap="$2" alignItems="center">
+            <Button onPress={decrementQuantity}>-</Button>
+            <Text fontSize={'$4'}>{minimumStock.toString().padStart(2, '0')}</Text>
+            <Button onPress={incrementQuantity}>+</Button>
+          </XStack>
+        </YStack>
+
+        <XStack alignItems="center" gap='$2'>
+          <Switch size={'$4'} checked={discontinued} onCheckedChange={setDiscontinued}>
+            <Switch.Thumb animation="quicker" />
+          </Switch>
+          <Text>Produto descontinuado</Text>
+        </XStack>
+
+        <Button onPress={handleUpdate}>
+          Salvar
         </Button>
-      </View>
-    </View>
+      </YStack>
+
+      <Modal visible={modalVisible} transparent={true} animationType="fade">
+        <YStack flex={1} alignItems="center" justifyContent="flex-start" backgroundColor="#010101e0" paddingTop='$11' paddingHorizontal='$4'>
+          <Button onPress={() => setModalVisible(false)} marginBottom='$15' circular alignSelf='flex-end'>
+            <Feather name="x" size={24} color="#000" />
+          </Button>
+          <Image source={{ uri: imageUrl as string }} width={300} height={300} borderRadius="$4" />
+          <Button onPress={openShareDialogAsync} marginTop="$4" backgroundColor="$background">
+            <Feather name='share' size={20} color="#000" />
+            <Text marginLeft="$2">Compartilhar</Text>
+          </Button>
+        </YStack>
+      </Modal>
+    </YStack>
   );
 }

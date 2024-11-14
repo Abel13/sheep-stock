@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, FlatList, ActivityIndicator } from 'react-native';
-import { Colors } from '@/constants/Colors';
-import { useEffect } from 'react';
+import { YStack, Text, Card, ListItem, Spacer, Spinner, XStack } from 'tamagui';
+import { FlatList } from 'react-native';
 
 // Função para buscar ordens de compra
 const fetchOrders = async () => {
@@ -21,36 +20,41 @@ export default function OrderList() {
   });
 
   // Exibe uma mensagem de carregamento ou erro
-  if (isLoading) return <ActivityIndicator size="large" color={Colors.light.icon} />;
-  if (error) return <Text>Error: {error.message}</Text>;
-
-  // Renderiza cada item da lista
-  const renderOrderItem = ({ item }: { item: { supplier: string; total_value: number; total_items: number; purchase_date: string } }) => (
-    <View style={{
-      padding: 15,
-      backgroundColor: Colors.light.background,
-      marginVertical: 5,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: Colors.light.icon
-    }}>
-      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.supplier}</Text>
-      <View style={{flexDirection: 'row', gap: 10, marginBottom: 10}}>
-        <Text style={{fontSize: 10}}>{new Date(item.purchase_date).toLocaleDateString()}</Text>
-        <Text style={{fontSize: 10}}>{item.total_items} itens</Text>
-      </View>
-      <Text style={{textAlign: 'right', fontSize: 22, fontWeight: '500'}}>R$ {item.total_value.toFixed(2)}</Text>
-    </View>
-  );
+  if (isLoading) return <YStack flex={1} justifyContent="center" alignItems="center"><Spinner size="large" /></YStack>;
+  if (error) return <YStack padding="$4"><Text color="$red10">Erro: {error.message}</Text></YStack>;
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: Colors.light.background }}>
+    <YStack padding="$4" flex={1} backgroundColor="$background">
       <FlatList
         data={orders}
-        renderItem={renderOrderItem}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={{ paddingBottom: 20 }}
+        renderItem={({ item }) => (
+          <ListItem
+            padding="$3"
+            bordered
+            radiused
+            hoverTheme
+            pressTheme
+          >
+            <YStack flex={1} gap='$2'>
+              <Text fontSize="$4" fontWeight="600">{item.supplier}</Text>
+              <XStack gap="$2">
+                <Text fontSize={10} color="$color10">
+                  {new Date(item.purchase_date).toLocaleDateString()}
+                </Text>
+                <Text fontSize={10} color="$color10">
+                  {item.total_items} itens
+                </Text>
+              </XStack>
+              <Text textAlign="right" fontSize="$5" fontWeight="300">
+                R$ {item.total_value.toFixed(2)}
+              </Text>
+            </YStack>
+          </ListItem>
+        )}
+        ItemSeparatorComponent={() => <Spacer size="$3" />}
       />
-    </View>
+    </YStack>
   );
 }

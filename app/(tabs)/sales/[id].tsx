@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { View, Text, FlatList } from 'react-native';
-import { Colors } from '@/constants/Colors';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Button, ButtonText } from '@/components/ui/button';
+import {
+  YStack,
+  XStack,
+  Text,
+  Card,
+  Separator,
+  Spacer,
+} from 'tamagui';
+import { FlatList } from 'react-native';
 
+// Função para buscar detalhes da venda
 const fetchSaleDetails = async ({ queryKey }) => {
   const [, saleId] = queryKey;
 
@@ -19,7 +26,13 @@ const fetchSaleDetails = async ({ queryKey }) => {
 
   const { data: saleItems, error: itemsError } = await supabase
     .from('sale_products')
-    .select('product_code, quantity, unit_price, total_price')
+    .select(`
+      product_code,
+      quantity,
+      unit_price,
+      total_price,
+      products (product_name)
+    `)
     .eq('sale_id', saleId);
 
   if (itemsError) throw new Error(itemsError.message);
@@ -30,57 +43,61 @@ const fetchSaleDetails = async ({ queryKey }) => {
 export default function SaleDetails() {
   const { id } = useLocalSearchParams();
   const saleId = id?.toString() || '';
-  const router = useRouter()
+  const router = useRouter();
 
   const { data, error, isLoading } = useQuery({
     queryKey: ['saleDetails', saleId],
     queryFn: fetchSaleDetails,
   });
 
-  if (isLoading) return <Text>Loading...</Text>;
-  if (error) return <Text>Error: {error.message}</Text>;
+  if (isLoading) return <YStack padding="$4"><Text>Loading...</Text></YStack>;
+  if (error) return <YStack padding="$4"><Text color="$red10">Error: {error.message}</Text></YStack>;
 
   const { sale, items } = data;
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: Colors.light.background }}>
-      <View style={{ marginBottom: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Detalhes da Venda</Text>
-        <Text>ID da Venda: {sale.id}</Text>
-        <Text>Data: {new Date(sale.sale_date).toLocaleDateString()}</Text>
-        <Text>Total da Venda: R$ {sale.total_amount.toFixed(2)}</Text>
-      </View>
+    <YStack flex={1} padding="$4" backgroundColor="$background">
+      <YStack marginBottom="$4">
+        <Text fontSize="$5" fontWeight="bold">{sale.customer_name}</Text>
+        <Text fontSize={8} marginBottom='$2'>ID da Venda: {sale.id}</Text>
+        <Text fontSize={12} fontWeight={'600'}>{new Date(sale.sale_date).toLocaleDateString()}</Text>
+        <Text fontWeight={'bold'}>Total: R$ {sale.total_amount.toFixed(2)}</Text>
+      </YStack>
 
-      <Text style={{ fontSize: 16, marginBottom: 10 }}>Itens Vendidos</Text>
+      <Text fontSize="$4" marginBottom="$3">Itens</Text>
       <FlatList
         data={items}
         keyExtractor={(item) => item.product_code}
-        ItemSeparatorComponent={() => <View style={{ height: 5 }} />}
+        ItemSeparatorComponent={() => <Spacer size="$1" />}
         renderItem={({ item }) => (
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingVertical: 10,
-              paddingHorizontal: 10,
-              borderWidth: 1,
-              borderColor: Colors.light.icon,
-              borderRadius: 7,
-            }}
+          <Card
+            paddingHorizontal="$3"
+            paddingVertical='$2'
+            bordered
+            radiused
+            hoverTheme
+            pressTheme
           >
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: Colors.light.icon, fontSize: 10 }}>Código do Produto: {item.product_code}</Text>
-              <Text>Quantidade: {item.quantity}</Text>
-              <Text>Preço Unitário: R$ {item.unit_price.toFixed(2)}</Text>
-            </View>
-            <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
-              <Text style={{ color: Colors.light.icon, fontSize: 10 }}>Total</Text>
-              <Text style={{ fontSize: 18 }}>R$ {item.total_price.toFixed(2)}</Text>
-            </View>
-          </View>
+            <Text color="$gray10Dark" fontSize={8}>{item.product_code}</Text>
+            <Text fontSize={12}>{item.products.product_name}</Text>
+            <XStack justifyContent="space-between" marginTop='$3'>
+              <YStack alignItems='center'>
+                <Text fontWeight={'600'}>QTD:</Text>
+                <Text fontWeight={'600'}>{item.quantity}</Text>
+              </YStack>
+              <YStack alignItems='center'>
+                <Text fontWeight={'600'}>PREÇO UNIT.:</Text>
+                <Text fontWeight={'600'}>R$ {item.unit_price.toFixed(2)}</Text>
+              </YStack>
+              <YStack alignItems='flex-end'>
+                <Text fontSize="$2" color="$colorSubtle">TOTAL</Text>
+                <Text fontSize="$4" fontWeight={'600'}>R$ {item.total_price.toFixed(2)}</Text>
+              </YStack>
+              
+            </XStack>
+          </Card>
         )}
       />
-    </View>
+    </YStack>
   );
 }
