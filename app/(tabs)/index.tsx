@@ -128,16 +128,22 @@ export default function SaleScreen() {
         placeholder="Nome do cliente"
         value={customer}
         onChangeText={setCustomer}
+        autoCapitalize='words'
+        autoCorrect={false}
+        returnKeyType='next'
       />
       <Spacer size={10} />
       <Text htmlFor='search' fontSize={12}>Produto</Text>
       <Input
         placeholder="Buscar produto por nome ou código"
         value={search}
+        autoCapitalize='characters'
+        autoCorrect={false}
         onChangeText={(text) => {
           setSearch(text);
           setShowSearchResults(true);
         }}
+        
       />
 
       {showSearchResults && search && (
