@@ -95,13 +95,15 @@ export default function SaleScreen() {
   };
 
   const totalAmount = selectedProducts.reduce((total, product) => total + product.unit_price * product.quantity, 0);
+  const allowFinish = selectedProducts.length > 0;
 
   const mutation = useMutation({
     mutationFn: createSale,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
-      queryClient.invalidateQueries({ queryKey: ['products', ''] });
+      queryClient.invalidateQueries({ queryKey: ['products_list', ''] });
       setSelectedProducts([]);
+      setCustomer('')
       toast.show('Tudo certo!', {
         message: 'Dados salvos com sucesso!'
       });
@@ -222,7 +224,7 @@ export default function SaleScreen() {
           Total: R$ {totalAmount.toFixed(2)}
         </Label>
 
-        <Button onPress={handleFinalizeSale} size="$3">
+        <Button onPress={handleFinalizeSale} disabled={!allowFinish} theme={allowFinish ? 'active' : 'gray'}>
           Finalizar Venda
         </Button>
       </Card>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, useColorScheme } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import AWS from 'aws-sdk';
 import { supabase } from '@/services/supabaseClient';
 import { Product } from '@/types/Product';
@@ -53,6 +53,7 @@ export default function ProductEdit() {
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const toast = useToastController();
+  const router = useRouter()
 
   const [salePrice, setSalePrice] = useState<string>('');
   const [minimumStock, setMinimumStock] = useState<number>(0);
@@ -72,6 +73,8 @@ export default function ProductEdit() {
         message: 'Dados salvos com sucesso!'
       });
       queryClient.invalidateQueries({ queryKey: ['product', id] });
+      queryClient.invalidateQueries({ queryKey: ['products_list', ''] });
+      router.back();
     },
   });
 

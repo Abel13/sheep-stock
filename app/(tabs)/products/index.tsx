@@ -1,7 +1,7 @@
 import { useState, memo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { FlatList } from 'react-native';
+import { FlatList, RefreshControl } from 'react-native';
 import { Product } from '@/types/Product';
 import { useRouter } from 'expo-router';
 import {
@@ -63,22 +63,23 @@ const ProductItem = memo(({ item, onPress }: { item: Product, onPress: (code: st
 ));
 
 export default function Products() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
   const { data: products, error, isLoading } = useQuery({
-    queryKey: ['products', search],
+    queryKey: ['products_list', search],
     queryFn: () => fetchProducts(search),
   });
 
   const handlePress = (productCode: string) => {
+    setSearch('')
     router.push({
       pathname: `/products/[id]`,
       params: { id: productCode }
     });
   };
 
-  if (isLoading && !search) return <YStack padding="$4"><Text>Loading...</Text></YStack>;
   if (error) return <YStack padding="$4"><Text color="$red10">Error: {error.message}</Text></YStack>;
 
   return (
@@ -95,6 +96,13 @@ export default function Products() {
       <FlatList
         data={products}
         keyExtractor={(item: Product) => item.product_code}
+        refreshControl={
+          <RefreshControl refreshing={isLoading}/>
+        }
+        onRefresh={() => {
+          queryClient.invalidateQueries({ queryKey: ['products_list', search] });
+        }}
+        refreshing={isLoading}
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}

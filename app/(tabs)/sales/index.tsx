@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
 import { useRouter } from 'expo-router';
-import { SectionList } from 'react-native';
+import { RefreshControl, SectionList } from 'react-native';
 import {
   YStack,
   XStack,
@@ -41,14 +41,16 @@ const groupSalesByDate = (sales) => {
 };
 
 export default function Sales() {
+  const queryClient = useQueryClient();
   const router = useRouter();
+
 
   const { data: sales, error, isLoading } = useQuery({
     queryKey: ['sales'],
     queryFn: () => fetchSales(),
   });
 
-  if (isLoading) return <YStack padding="$4"><Text>Loading...</Text></YStack>;
+  // if (isLoading) return <YStack padding="$4"><Text>Loading...</Text></YStack>;
   if (error) return <YStack padding="$4"><Text color="$red10">Error: {error.message}</Text></YStack>;
 
   const groupedSales = groupSalesByDate(sales || []);
@@ -58,6 +60,13 @@ export default function Sales() {
       <SectionList
         sections={groupedSales}
         keyExtractor={(item) => item.id.toString()}
+        refreshControl={
+          <RefreshControl refreshing={isLoading}/>
+        }
+        onRefresh={() => {
+          queryClient.invalidateQueries({ queryKey: ['sales'] });
+        }}
+        refreshing={isLoading}
         renderSectionHeader={({ section: { title } }) => (
           <YStack paddingVertical="$3" backgroundColor={'$background'}>
             <Text fontSize="$4" fontWeight="bold" color="$color10">{title}</Text>
