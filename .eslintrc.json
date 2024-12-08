@@ -6,7 +6,9 @@
     "plugin:react/recommended",
     "airbnb",
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended"
+    "plugin:prettier/recommended",
+    "plugin:react-hooks/recommended",
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -17,7 +19,7 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["react", "@typescript-eslint", "react-hooks", "prettier"],
+  "plugins": ["react", "@typescript-eslint", "prettier"],
   "globals": {
     "__DEV__": "readonly"
   },
@@ -25,7 +27,6 @@
     "no-use-before-define": "error",
     "no-tabs": "error",
     "no-undef": "error",
-    "no-console": 1,
     "prettier/prettier": "error",
     "@typescript-eslint/no-redeclare": "error",
     "@typescript-eslint/space-before-function-paren": "off",
@@ -73,16 +74,11 @@
     ],
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "react/jsx-filename-extension": [
-      1,
-      {
-        "extensions": [".tsx"]
-      }
-    ],
     "react/jsx-no-bind": "off",
     "react/require-default-props": "off",
     "react/react-in-jsx-scope": "off",
-    "react/jsx-props-no-spreading": "off",
+    "@typescript-eslint/no-unused-vars": "error",
+    "react/jsx-filename-extension": [1, { "extensions": [".tsx"] }],
     "react/function-component-definition": [
       "error",
       {
@@ -99,11 +95,15 @@
       }
     ],
     "import/no-extraneous-dependencies": ["error"],
-    "import/prefer-default-export": "off"
+    "import/prefer-default-export": "off",
+    "no-console": "warn"
   },
   "settings": {
     "import/resolver": {
       "typescript": {}
+    },
+    "react": {
+      "version": "detect"
     }
   }
 }
