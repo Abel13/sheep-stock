@@ -1,5 +1,5 @@
-import { Database } from "./database.types"
+import { Database } from './database.types';
 
-export type Product = Database['public']['Tables']['products']['Row']
-export type InsertProduct = Database['public']['Tables']['products']['Insert']
-export type UpdateProduct = Database['public']['Tables']['products']['Update']
+export type Product = Database['public']['Tables']['products']['Row'];
+export type InsertProduct = Database['public']['Tables']['products']['Insert'];
+export type UpdateProduct = Database['public']['Tables']['products']['Update'];

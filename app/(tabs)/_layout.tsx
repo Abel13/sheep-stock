@@ -38,6 +38,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="purchases"
         options={{
+          headerShown: false,
           title: 'Compras',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cart-outline" color={color} size={size} />

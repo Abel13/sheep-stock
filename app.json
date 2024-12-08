@@ -27,9 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.abelb13.sheepstock",
-      "permissions": [
-        "android.permission.ACCESS_NETWORK_STATE"
-      ]
+      "permissions": ["android.permission.ACCESS_NETWORK_STATE"]
     },
     "web": {
       "bundler": "metro",
@@ -39,10 +37,16 @@
     "plugins": [
       "expo-router",
       "expo-router",
-      [ 
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
         }
       ]
     ],

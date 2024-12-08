@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { YStack, XStack, ListItem, Label, Button, Spacer, Card, Text } from 'tamagui';
+import {
+  YStack,
+  XStack,
+  ListItem,
+  Label,
+  Button,
+  Spacer,
+  Card,
+  Text,
+} from 'tamagui';
 import { useRouter } from 'expo-router';
 import { FlatList } from 'react-native';
 
@@ -12,26 +21,38 @@ const fetchLowStockProducts = async () => {
 
 export default function LowStockScreen() {
   const router = useRouter();
-  const { data: products, error, isLoading } = useQuery({
+  const {
+    data: products,
+    error,
+    isLoading,
+  } = useQuery({
     queryKey: ['lowStockProducts'],
     queryFn: fetchLowStockProducts,
   });
 
-  if (isLoading) return <YStack padding="$4"><Label>Carregando...</Label></YStack>;
-  if (error) return <YStack padding="$4"><Label>Erro: {error.message}</Label></YStack>;
+  if (isLoading)
+    return (
+      <YStack padding="$4">
+        <Label>Carregando...</Label>
+      </YStack>
+    );
+  if (error)
+    return (
+      <YStack padding="$4">
+        <Label>Erro: {error.message}</Label>
+      </YStack>
+    );
 
   return (
     <YStack paddingInline="$3" flex={1} backgroundColor="$background">
-      <Label fontSize={'$6'}>
-        Produtos com Estoque Baixo
-      </Label>
+      <Label fontSize={'$6'}>Produtos com Estoque Baixo</Label>
       <FlatList
         data={products}
-        keyExtractor={(item) => item.product_code}
+        keyExtractor={item => item.product_code}
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}
-        ListFooterComponent={()=><Spacer size='$3'/>}
+        ListFooterComponent={() => <Spacer size="$3" />}
         renderItem={({ item }) => (
           <ListItem
             key={item.product_code}
@@ -43,7 +64,7 @@ export default function LowStockScreen() {
             onPress={() => {
               router.push({
                 pathname: '/(tabs)/products/[id]',
-                params: { id: item.product_code }
+                params: { id: item.product_code },
               });
             }}
           >
@@ -62,7 +83,12 @@ export default function LowStockScreen() {
         )}
         ItemSeparatorComponent={() => <Spacer size="$2" />}
         ListEmptyComponent={() => (
-          <Card justifyContent='center' alignItems='center' padding="$4" bordered>
+          <Card
+            justifyContent="center"
+            alignItems="center"
+            padding="$4"
+            bordered
+          >
             <Label>Todos os produtos estão com estoque acima do mínimo.</Label>
           </Card>
         )}

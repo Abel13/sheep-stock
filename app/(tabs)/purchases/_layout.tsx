@@ -1,8 +1,9 @@
 import React from 'react';
+
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Stack } from 'expo-router';
 
-export default function ProductStackLayout() {
+export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
@@ -10,15 +11,13 @@ export default function ProductStackLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Estoque',
+          title: 'Compras',
         }}
       />
       <Stack.Screen
-        name="[id]"
+        name="add"
         options={{
-          title: 'Produto',
-          headerBackTitleVisible: true,
-          headerShown: true,
+          title: 'Nova Compra',
         }}
       />
     </Stack>
