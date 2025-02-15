@@ -13,6 +13,7 @@ import {
   useToastState,
 } from '@tamagui/toast';
 import defaultConfig from '@tamagui/config/v3';
+import { useColorScheme } from 'react-native';
 
 const config = createTamagui(defaultConfig);
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ declare module '@tamagui/core' {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const theme = useColorScheme() || 'light';
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -67,7 +69,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TamaguiProvider config={config} defaultTheme="light_blue">
+      <TamaguiProvider config={config} defaultTheme={`${theme}_purple`}>
         <ToastProvider>
           <Slot />
           <CurrentToast />

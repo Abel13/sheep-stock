@@ -2,10 +2,15 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from 'react-native';
 
 export default function TabLayout() {
+  const theme = useColorScheme() || 'light';
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{ tabBarActiveTintColor: Colors[theme].tabIconSelected }}
+    >
       <Tabs.Screen
         name="index"
         options={{

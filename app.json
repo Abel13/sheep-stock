@@ -27,7 +27,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.abelb13.sheepstock",
-      "permissions": ["android.permission.ACCESS_NETWORK_STATE"]
+      "permissions": [
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -48,7 +50,8 @@
         {
           "iCloudContainerEnvironment": "Production"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
