@@ -13,7 +13,7 @@ import {
   useToastState,
 } from '@tamagui/toast';
 import defaultConfig from '@tamagui/config/v3';
-import { useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native';
 
 const config = createTamagui(defaultConfig);
 const queryClient = new QueryClient();
@@ -72,6 +72,7 @@ export default function RootLayout() {
       <TamaguiProvider config={config} defaultTheme={`${theme}_purple`}>
         <ToastProvider>
           <Slot />
+          <StatusBar style="auto" />
           <CurrentToast />
           <ToastViewport
             flexDirection="column-reverse"

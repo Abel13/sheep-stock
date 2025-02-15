@@ -57,7 +57,8 @@
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
     "tailwindcss": "^3.4.13",
-    "tamagui": "^1.116.14"
+    "tamagui": "^1.116.14",
+    "expo-updates": "~0.26.18"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
