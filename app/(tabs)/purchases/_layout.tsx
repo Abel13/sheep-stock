@@ -1,13 +1,20 @@
 import React from 'react';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Stack } from 'expo-router';
+import { useTheme } from 'tamagui';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const theme = useTheme();
 
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.background.get(),
+        },
+        headerTintColor: theme.color12.get(),
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{

@@ -12,6 +12,7 @@ import {
   Spacer,
   Label,
   Card,
+  useTheme,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
 import { FlatList } from 'react-native';
@@ -57,6 +58,7 @@ const createSale = async ({
 export default function SaleScreen() {
   const queryClient = useQueryClient();
   const toast = useToastController();
+  const theme = useTheme();
 
   const [search, setSearch] = useState('');
   const [customer, setCustomer] = useState('');
@@ -239,7 +241,11 @@ export default function SaleScreen() {
             padding={20}
             bordered
           >
-            <Feather name="shopping-cart" size={24} />
+            <Feather
+              name="shopping-cart"
+              size={24}
+              color={theme.color9.get()}
+            />
             <Label>Nenhum produto adicionado.</Label>
           </Card>
         )}

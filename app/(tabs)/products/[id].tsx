@@ -18,6 +18,8 @@ import {
   Card,
   Switch,
   Image,
+  useTheme,
+  View,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
 
@@ -70,6 +72,7 @@ export default function ProductEdit() {
   const queryClient = useQueryClient();
   const toast = useToastController();
   const router = useRouter();
+  const theme = useTheme();
 
   const [salePrice, setSalePrice] = useState<string>('');
   const [minimumStock, setMinimumStock] = useState<number>(0);
@@ -209,18 +212,28 @@ export default function ProductEdit() {
         justifyContent="center"
         alignItems="center"
         marginBlock="$2"
+        marginBottom="$5"
       >
         {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            width={100}
-            height={100}
-            borderRadius="$4"
-            borderWidth={1}
-            borderColor={'$borderColor'}
-          />
+          <View flex={1} gap={5}>
+            <Image
+              source={{ uri: imageUrl }}
+              width={100}
+              height={100}
+              borderRadius="$4"
+              borderWidth={1}
+              borderColor={'$borderColor'}
+            />
+            <Feather
+              name="edit"
+              size={24}
+              color={theme.color9.get()}
+              onPress={pickImage}
+              style={{ alignSelf: 'flex-end' }}
+            />
+          </View>
         ) : (
-          <Feather name="image" size={24} />
+          <Feather name="image" size={24} color={theme.color9.get()} />
         )}
       </Card>
 
@@ -277,7 +290,7 @@ export default function ProductEdit() {
             circular
             alignSelf="flex-end"
           >
-            <Feather name="x" size={24} color="#000" />
+            <Feather name="x" size={24} color={theme.color9.get()} />
           </Button>
           <Image
             source={{ uri: imageUrl as string }}
@@ -290,7 +303,7 @@ export default function ProductEdit() {
             marginTop="$4"
             backgroundColor="$background"
           >
-            <Feather name="share" size={20} color="#000" />
+            <Feather name="share" size={20} color={theme.color9.get()} />
             <Text marginLeft="$2">Compartilhar</Text>
           </Button>
         </YStack>

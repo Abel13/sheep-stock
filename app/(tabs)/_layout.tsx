@@ -1,15 +1,25 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from 'react-native';
+import { useTheme } from 'tamagui';
 
 export default function TabLayout() {
-  const theme = useColorScheme() || 'light';
+  const theme = useTheme();
+
   return (
     <Tabs
-      screenOptions={{ tabBarActiveTintColor: Colors[theme].tabIconSelected }}
+      screenOptions={{
+        tabBarActiveTintColor: theme.color12.get(),
+        tabBarInactiveTintColor: theme.color8.get(),
+        tabBarStyle: {
+          backgroundColor: theme.background.get(),
+          borderTopWidth: 0,
+        },
+        headerStyle: {
+          backgroundColor: theme.background.get(),
+        },
+        headerTintColor: theme.color12.get(),
+      }}
     >
       <Tabs.Screen
         name="index"
