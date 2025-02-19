@@ -260,7 +260,7 @@ export default function ProductEdit() {
         justifyContent="center"
         alignItems="center"
         marginBlock="$2"
-        marginBottom="$4"
+        marginBottom="$6"
       >
         {imageUrl ? (
           <View flex={1} gap={5}>
@@ -286,25 +286,24 @@ export default function ProductEdit() {
       </Card>
 
       <YStack gap="$4">
-        {avgPrice !== null && (
-          <View style={{ marginVertical: 10 }}>
-            <Text fontSize={12} color={theme.color11.get()}>
-              Preço médio de compra: R$ {avgPrice.toFixed(2)}
-            </Text>
-            <Text fontSize={12} color={theme.color9.get()}>
-              Preço de venda sugerido (
-              {suggestedPrice === null
-                ? '120%'
-                : `${(((suggestedPrice - avgPrice) / avgPrice) * 100).toFixed(0)}%`}
-              de lucro): R${' '}
-              {suggestedPrice !== null
-                ? suggestedPrice.toFixed(2)
-                : (avgPrice * 2.2).toFixed(2)}
-            </Text>
-          </View>
-        )}
-
         <YStack gap="$2">
+          {avgPrice !== null && (
+            <View style={{ marginVertical: 10 }}>
+              <Text fontSize={12} color={theme.color11.get()}>
+                Preço médio de compra: R$ {(avgPrice || 0).toFixed(2)}
+              </Text>
+              <Text fontSize={12} color={theme.color9.get()}>
+                Preço de venda sugerido (
+                {suggestedPrice === null
+                  ? '120%'
+                  : `${(((suggestedPrice - avgPrice) / avgPrice) * 100 || 0).toFixed(0)}% `}
+                de lucro): R${' '}
+                {suggestedPrice !== null
+                  ? (suggestedPrice || 0).toFixed(2)
+                  : ((avgPrice || 0) * 2.2).toFixed(2)}
+              </Text>
+            </View>
+          )}
           <Text>Preço de venda:</Text>
           <Input
             placeholder="Insira o novo preço"
