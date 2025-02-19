@@ -42,6 +42,27 @@ const fetchProductById = async (productId: string): Promise<Product> => {
   return data;
 };
 
+// Função para buscar o preço médio
+const fetchAveragePrice = async (productId: string) => {
+  const { data, error } = await supabase.rpc('calculate_average_price', {
+    product_code_input: productId,
+  });
+  if (error) throw new Error(error.message);
+  return data || 0;
+};
+
+// Função para buscar o preço sugerido
+const fetchSuggestedPrice = async (productId: string) => {
+  const { data, error } = await supabase
+    .from('suggested_prices')
+    .select('price')
+    .eq('product_code', productId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data?.price || null;
+};
+
 const updateProductDetails = async ({
   productId,
   salePrice,
@@ -72,7 +93,7 @@ export default function ProductEdit() {
   const queryClient = useQueryClient();
   const toast = useToastController();
   const router = useRouter();
-  const theme = useTheme();
+  const theme = useTheme() || 'light';
 
   const [salePrice, setSalePrice] = useState<string>('');
   const [minimumStock, setMinimumStock] = useState<number>(0);
@@ -87,6 +108,24 @@ export default function ProductEdit() {
   } = useQuery({
     queryKey: ['product', id],
     queryFn: () => fetchProductById(id as string),
+  });
+
+  const {
+    data: avgPrice,
+    error: avgError,
+    isLoading: avgLoading,
+  } = useQuery({
+    queryKey: ['averagePrice', id],
+    queryFn: () => fetchAveragePrice(id as string),
+  });
+
+  const {
+    data: suggestedPrice,
+    error: suggestedError,
+    isLoading: suggestedLoading,
+  } = useQuery({
+    queryKey: ['suggestedPrice', id],
+    queryFn: () => fetchSuggestedPrice(id as string),
   });
 
   const mutation = useMutation({
@@ -131,7 +170,7 @@ export default function ProductEdit() {
       const blob = await response.blob();
 
       const params = {
-        Bucket: 'sheep-stock',
+        Bucket: process.env.EXPO_PUBLIC_AWS_BUCKET_NAME as string,
         Key: `products/${id}.jpg`,
         Body: blob,
         ContentType: 'image/jpeg',
@@ -192,9 +231,18 @@ export default function ProductEdit() {
     }
   }, [product]);
 
-  if (productLoading) return <Text>Loading...</Text>;
+  if (productLoading)
+    return (
+      <YStack flex={1} padding="$4" backgroundColor="$background">
+        <Text>Loading...</Text>
+      </YStack>
+    );
   if (productError || !product)
-    return <Text>Error: {productError?.message}</Text>;
+    return (
+      <YStack flex={1} padding="$4" backgroundColor="$background">
+        <Text>Error: {productError?.message}</Text>
+      </YStack>
+    );
 
   return (
     <YStack flex={1} padding="$4" backgroundColor="$background">
@@ -212,7 +260,7 @@ export default function ProductEdit() {
         justifyContent="center"
         alignItems="center"
         marginBlock="$2"
-        marginBottom="$5"
+        marginBottom="$4"
       >
         {imageUrl ? (
           <View flex={1} gap={5}>
@@ -237,7 +285,25 @@ export default function ProductEdit() {
         )}
       </Card>
 
-      <YStack marginTop="$4" gap="$4">
+      <YStack gap="$4">
+        {avgPrice !== null && (
+          <View style={{ marginVertical: 10 }}>
+            <Text fontSize={12} color={theme.color11.get()}>
+              Preço médio de compra: R$ {avgPrice.toFixed(2)}
+            </Text>
+            <Text fontSize={12} color={theme.color9.get()}>
+              Preço de venda sugerido (
+              {suggestedPrice === null
+                ? '120%'
+                : `${(((suggestedPrice - avgPrice) / avgPrice) * 100).toFixed(0)}%`}
+              de lucro): R${' '}
+              {suggestedPrice !== null
+                ? suggestedPrice.toFixed(2)
+                : (avgPrice * 2.2).toFixed(2)}
+            </Text>
+          </View>
+        )}
+
         <YStack gap="$2">
           <Text>Preço de venda:</Text>
           <Input
