@@ -4,7 +4,16 @@ import { supabase } from '@/services/supabaseClient';
 import { FlatList, RefreshControl } from 'react-native';
 import { Product } from '@/types/Product';
 import { useRouter } from 'expo-router';
-import { YStack, XStack, Text, Button, Card, Spacer, Input } from 'tamagui';
+import {
+  YStack,
+  XStack,
+  Text,
+  Button,
+  Card,
+  Spacer,
+  Input,
+  Image,
+} from 'tamagui';
 
 // Função para buscar produtos
 const fetchProducts = async (search: string) => {
@@ -31,7 +40,26 @@ const ProductItem = memo(
       hoverTheme
       pressTheme
     >
-      <XStack>
+      <XStack gap="$3" alignItems="center">
+        {item.image_url ? (
+          <Image
+            source={{ uri: item.image_url }}
+            width={50}
+            height={50}
+            borderRadius="$4"
+            borderWidth={1}
+            borderColor={'$borderColor'}
+          />
+        ) : (
+          <XStack
+            width={50}
+            height={50}
+            borderWidth={2}
+            borderColor={'$borderColor'}
+            backgroundColor={'$background075'}
+            borderRadius={8}
+          />
+        )}
         <YStack flex={1}>
           <Text color="$color" fontSize={8} marginBottom="$1">
             {item.product_code}
@@ -43,7 +71,6 @@ const ProductItem = memo(
             Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}
           </Text>
         </YStack>
-        <Spacer size="$2" />
         <YStack alignItems="center" justifyContent="center">
           <Text fontSize="$2" color="$color" fontWeight="300">
             ESTOQUE
