@@ -126,6 +126,7 @@ export default function SaleScreen() {
       queryClient.invalidateQueries({ queryKey: ['products_list', ''] });
       setSelectedProducts([]);
       setCustomer('');
+      setValuePaid('');
       toast.show('Tudo certo!', {
         message: 'Dados salvos com sucesso!',
       });
