@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
 import { useRouter } from 'expo-router';
@@ -122,6 +121,19 @@ export default function Sales() {
                   TOTAL
                 </Text>
                 <Text fontSize="$4">R$ {item.total_amount.toFixed(2)}</Text>
+                <Spacer size="$2" />
+                <XStack alignItems="flex-end">
+                  <Text
+                    fontSize={12}
+                    color={
+                      item.value_paid !== item.total_amount
+                        ? '$red10Dark'
+                        : '$colorSubtle'
+                    }
+                  >
+                    TOTAL PAGO: {item.value_paid.toFixed(2)}
+                  </Text>
+                </XStack>
               </YStack>
             </XStack>
           </Card>

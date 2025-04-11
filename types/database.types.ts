@@ -179,18 +179,21 @@ export type Database = {
           id: string;
           sale_date: string | null;
           total_amount: number;
+          value_paid: number;
         };
         Insert: {
           customer_name?: string | null;
           id?: string;
           sale_date?: string | null;
           total_amount: number;
+          value_paid: number;
         };
         Update: {
           customer_name?: string | null;
           id?: string;
           sale_date?: string | null;
           total_amount?: number;
+          value_paid?: number;
         };
         Relationships: [];
       };

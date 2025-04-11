@@ -62,6 +62,7 @@ export default function SaleScreen() {
 
   const [search, setSearch] = useState('');
   const [customer, setCustomer] = useState('');
+  const [valuePaid, setValuePaid] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
@@ -138,13 +139,17 @@ export default function SaleScreen() {
   });
 
   const handleFinalizeSale = () => {
-    const saleData = { total_amount: totalAmount, customer_name: customer };
+    const saleData = {
+      total_amount: totalAmount,
+      customer_name: customer,
+      value_paid: valuePaid,
+    };
     mutation.mutate({ saleData, saleProducts: selectedProducts });
   };
 
   return (
     <YStack padding="$4" flex={1} backgroundColor="$background">
-      <Text htmlFor="customer" fontSize={12}>
+      <Text htmlFor="customer" fontSize={12} marginBottom={5}>
         Cliente
       </Text>
       <Input
@@ -156,9 +161,20 @@ export default function SaleScreen() {
         returnKeyType="next"
       />
       <Spacer size={10} />
-      <Text htmlFor="search" fontSize={12}>
-        Produto
+      <Text htmlFor="customer" fontSize={12} marginBottom={5}>
+        Valor pago
       </Text>
+      <Input
+        placeholder="Valor pago"
+        value={valuePaid}
+        onChangeText={setValuePaid}
+        keyboardType="numeric"
+        autoCorrect={false}
+        returnKeyType="next"
+      />
+      <Label fontSize={'$7'} marginTop={'$3'}>
+        Produtos:
+      </Label>
       <Input
         placeholder="Buscar produto por nome ou código"
         value={search}
@@ -169,13 +185,13 @@ export default function SaleScreen() {
           setShowSearchResults(true);
         }}
       />
-
+      <Spacer size={10} />
       {showSearchResults && search && (
         <YStack
           position="absolute"
-          top={150}
-          left={15}
-          right={15}
+          top={250}
+          left={18}
+          right={18}
           borderWidth={1}
           backgroundColor={'$borderColor'}
           borderColor="$borderColor"
@@ -226,10 +242,6 @@ export default function SaleScreen() {
           )}
         </YStack>
       )}
-
-      <Label fontSize={'$7'} marginTop={'$3'}>
-        Produtos:
-      </Label>
       <FlatList
         data={selectedProducts}
         keyExtractor={item => item.product_code}
