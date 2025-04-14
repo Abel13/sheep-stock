@@ -3,7 +3,6 @@ import { supabase } from '@/services/supabaseClient';
 import {
   YStack,
   Text,
-  Card,
   ListItem,
   Spacer,
   Spinner,
@@ -37,13 +36,18 @@ export default function OrderList() {
   // Exibe uma mensagem de carregamento ou erro
   if (isLoading)
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center">
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        backgroundColor="$background"
+      >
         <Spinner size="large" />
       </YStack>
     );
   if (error)
     return (
-      <YStack padding="$4">
+      <YStack padding="$4" backgroundColor="$background">
         <Text color="$red10">Erro: {error.message}</Text>
       </YStack>
     );

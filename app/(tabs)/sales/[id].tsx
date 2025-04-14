@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import {
   YStack,
   XStack,
@@ -48,15 +48,18 @@ const fetchSaleDetails = async ({ queryKey }) => {
 
 const updateCustomer = async ({
   customerName,
+  valuePaid,
   saleId,
 }: {
   customerName: string;
+  valuePaid: number;
   saleId: string;
 }) => {
   const { error } = await supabase
     .from('sales')
     .update({
       customer_name: customerName,
+      value_paid: valuePaid,
     })
     .eq('id', saleId);
 
@@ -72,6 +75,7 @@ export default function SaleDetails() {
   const theme = useTheme();
 
   const [customer, setCustomer] = useState('');
+  const [valuePaid, setValuePaid] = useState('');
 
   const { data, error, isLoading } = useQuery({
     queryKey: ['saleDetails', saleId],
@@ -94,24 +98,30 @@ export default function SaleDetails() {
   });
 
   const handleSaveCustomer = () => {
-    mutation.mutate({ customerName: customer, saleId: saleId });
+    mutation.mutate({
+      customerName: customer,
+      valuePaid: Number(valuePaid),
+      saleId: saleId,
+    });
   };
 
   useEffect(() => {
     if (data) {
       setCustomer(sale.customer_name);
+      setValuePaid((sale.value_paid || 0)?.toString());
     }
   }, [data]);
 
   if (isLoading)
     return (
-      <YStack padding="$4">
+      <YStack padding="$4" backgroundColor="$background">
         <Text>Loading...</Text>
       </YStack>
     );
+
   if (error)
     return (
-      <YStack padding="$4">
+      <YStack padding="$4" backgroundColor="$background">
         <Text color="$red10">Error: {error.message}</Text>
       </YStack>
     );
@@ -124,8 +134,20 @@ export default function SaleDetails() {
         <Text fontSize={8} marginBottom="$2">
           ID da Venda: {sale.id}
         </Text>
-        <XStack gap={5}>
-          <Input flex={1} value={customer} onChangeText={setCustomer} />
+        <Text fontSize={12} fontWeight={'600'}>
+          {new Date(sale.sale_date).toLocaleDateString()}
+        </Text>
+        <Text fontWeight={'bold'} fontSize={22}>
+          Total: R$ {sale.total_amount?.toFixed(2)}
+        </Text>
+        <YStack gap={5} marginTop={'$4'}>
+          <Text marginTop="$2">Cliente</Text>
+          <Input value={customer} onChangeText={setCustomer} />
+          <Text marginTop="$2">Valor Pago</Text>
+          <Input
+            value={valuePaid}
+            onChangeText={value => setValuePaid(value)}
+          />
           <Button variant="outlined" onPress={handleSaveCustomer}>
             <Button.Icon>
               <Ionicons
@@ -135,13 +157,7 @@ export default function SaleDetails() {
               />
             </Button.Icon>
           </Button>
-        </XStack>
-        <Text fontSize={12} fontWeight={'600'}>
-          {new Date(sale.sale_date).toLocaleDateString()}
-        </Text>
-        <Text fontWeight={'bold'}>
-          Total: R$ {sale.total_amount.toFixed(2)}
-        </Text>
+        </YStack>
       </YStack>
 
       <Text fontSize="$4" marginBottom="$3">
@@ -171,14 +187,14 @@ export default function SaleDetails() {
               </YStack>
               <YStack alignItems="center">
                 <Text fontWeight={'600'}>PREÇO UNIT.:</Text>
-                <Text fontWeight={'600'}>R$ {item.unit_price.toFixed(2)}</Text>
+                <Text fontWeight={'600'}>R$ {item.unit_price?.toFixed(2)}</Text>
               </YStack>
               <YStack alignItems="flex-end">
                 <Text fontSize="$2" color="$colorSubtle">
                   TOTAL
                 </Text>
                 <Text fontSize="$4" fontWeight={'600'}>
-                  R$ {item.total_price.toFixed(2)}
+                  R$ {item.total_price?.toFixed(2)}
                 </Text>
               </YStack>
             </XStack>

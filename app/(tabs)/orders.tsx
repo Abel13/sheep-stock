@@ -32,13 +32,13 @@ export default function LowStockScreen() {
 
   if (isLoading)
     return (
-      <YStack padding="$4">
+      <YStack padding="$4" backgroundColor="$background">
         <Label>Carregando...</Label>
       </YStack>
     );
   if (error)
     return (
-      <YStack padding="$4">
+      <YStack padding="$4" backgroundColor="$background">
         <Label>Erro: {error.message}</Label>
       </YStack>
     );

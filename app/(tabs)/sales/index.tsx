@@ -131,7 +131,7 @@ export default function Sales() {
                         : '$colorSubtle'
                     }
                   >
-                    TOTAL PAGO: {item.value_paid.toFixed(2)}
+                    TOTAL PAGO: R$ {(item.value_paid || 0)?.toFixed(2)}
                   </Text>
                 </XStack>
               </YStack>

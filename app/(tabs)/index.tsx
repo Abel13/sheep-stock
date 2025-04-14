@@ -15,7 +15,7 @@ import {
   useTheme,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
-import { FlatList } from 'react-native';
+import { Alert, FlatList } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 const fetchProducts = async (search: string): Promise<Product[]> => {
@@ -50,9 +50,15 @@ const createSale = async ({
     sale_id: saleId,
     product_code: product.product_code,
     quantity: product.quantity,
-    unit_price: product.unit_price,
+    unit_price: product.unit_price || 0,
   }));
-  await supabase.from('sale_products').insert(productsData);
+  const { error: errorProducts } = await supabase
+    .from('sale_products')
+    .insert(productsData);
+  if (errorProducts) {
+    await supabase.from('sales').delete().eq('id', saleId);
+    Alert.alert('Erro', 'Falha ao salvar a venda!');
+  }
 };
 
 export default function SaleScreen() {

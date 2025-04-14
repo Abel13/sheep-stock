@@ -17,7 +17,11 @@ import {
 
 // Função para buscar produtos
 const fetchProducts = async (search: string) => {
-  let query = supabase.from('products').select('*').order('product_name');
+  let query = supabase
+    .from('products')
+    .select('*')
+    .neq('stock_quantity', 0)
+    .order('product_name');
   if (search) {
     query = query.or(
       `product_name.ilike.%${search}%,product_code.ilike.%${search}%`,
