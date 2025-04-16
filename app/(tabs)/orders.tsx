@@ -9,12 +9,15 @@ import {
   Spacer,
   Card,
   Text,
+  Spinner,
 } from 'tamagui';
 import { useRouter } from 'expo-router';
 import { FlatList } from 'react-native';
 
 const fetchLowStockProducts = async () => {
-  const { data, error } = await supabase.rpc('fetch_low_stock_products');
+  const { data, error } = await supabase
+    .rpc('fetch_low_stock_products')
+    .order('product_name');
   if (error) throw new Error(error.message);
   return data;
 };
@@ -32,20 +35,27 @@ export default function LowStockScreen() {
 
   if (isLoading)
     return (
-      <YStack padding="$4" backgroundColor="$background">
-        <Label>Carregando...</Label>
+      <YStack
+        flex={1}
+        padding="$4"
+        paddingTop="$10"
+        backgroundColor="$background"
+        alignItems="center"
+        gap={10}
+      >
+        <Spinner size="large" color="$lavender" />
+        <Text>Carregando produtos...</Text>
       </YStack>
     );
   if (error)
     return (
-      <YStack padding="$4" backgroundColor="$background">
+      <YStack flex={1} padding="$4" backgroundColor="$background">
         <Label>Erro: {error.message}</Label>
       </YStack>
     );
 
   return (
     <YStack paddingInline="$3" flex={1} backgroundColor="$background">
-      <Label fontSize={'$6'}>Produtos com Estoque Baixo</Label>
       <FlatList
         data={products}
         keyExtractor={item => item.product_code}
@@ -62,7 +72,7 @@ export default function LowStockScreen() {
             hoverTheme
             pressTheme
             onPress={() => {
-              router.push({
+              router.navigate({
                 pathname: '/(tabs)/products/[id]',
                 params: { id: item.product_code },
               });

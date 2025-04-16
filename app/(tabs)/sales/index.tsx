@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { RefreshControl, SectionList } from 'react-native';
 import { YStack, XStack, Text, Card, Separator, Spacer } from 'tamagui';
 import { Sale } from '@/types/Sale';
+import { formatCurrency } from '@/utils/currency';
 
 // Função para buscar vendas
 const fetchSales = async () => {
@@ -87,7 +88,7 @@ export default function Sales() {
               textAlign="right"
               paddingInline="$2"
             >
-              Total: R$ {totalAmount.toFixed(2)}
+              Total: {formatCurrency(totalAmount)}
             </Text>
             <Separator borderColor="$borderColor" marginTop="$2" />
           </YStack>
@@ -120,7 +121,7 @@ export default function Sales() {
                 <Text fontSize={12} color="$colorSubtle">
                   TOTAL
                 </Text>
-                <Text fontSize="$4">R$ {item.total_amount.toFixed(2)}</Text>
+                <Text fontSize="$4">{formatCurrency(item.total_amount)}</Text>
                 <Spacer size="$2" />
                 <XStack alignItems="flex-end">
                   <Text
@@ -131,7 +132,7 @@ export default function Sales() {
                         : '$colorSubtle'
                     }
                   >
-                    TOTAL PAGO: R$ {(item.value_paid || 0)?.toFixed(2)}
+                    TOTAL PAGO: {formatCurrency(item.value_paid)}
                   </Text>
                 </XStack>
               </YStack>

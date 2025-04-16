@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
 import { Product } from '@/types/Product';
@@ -13,10 +13,21 @@ import {
   Label,
   Card,
   useTheme,
+  Separator,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
-import { Alert, FlatList } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { FlatList } from 'react-native';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { saleSchema, SaleFormValues } from '@/schemas/saleSchema';
+import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { FormField } from '@/components/molecules/FormField/FormField';
+import { formatCurrency } from '@/utils/currency';
+import { createSale } from '@/services/sale';
+import { SearchField } from '@/components/molecules/SearchField';
+import { ProductListItem } from '@/components/molecules/ProductListItem';
+import { CartItem } from '@/components/molecules/CartItem';
+import { EmptyList } from '@/components/molecules/EmptyList';
 
 const fetchProducts = async (search: string): Promise<Product[]> => {
   try {
@@ -32,51 +43,47 @@ const fetchProducts = async (search: string): Promise<Product[]> => {
   }
 };
 
-const createSale = async ({
-  saleData,
-  saleProducts,
-}: {
-  saleData: any;
-  saleProducts: any[];
-}) => {
-  const { data, error } = await supabase
-    .from('sales')
-    .insert([saleData])
-    .select();
-  if (error) throw new Error(error.message);
-  const saleId = data[0].id;
-
-  const productsData = saleProducts.map(product => ({
-    sale_id: saleId,
-    product_code: product.product_code,
-    quantity: product.quantity,
-    unit_price: product.unit_price || 0,
-  }));
-  const { error: errorProducts } = await supabase
-    .from('sale_products')
-    .insert(productsData);
-  if (errorProducts) {
-    await supabase.from('sales').delete().eq('id', saleId);
-    Alert.alert('Erro', 'Falha ao salvar a venda!');
-  }
-};
-
 export default function SaleScreen() {
   const queryClient = useQueryClient();
   const toast = useToastController();
-  const theme = useTheme();
 
   const [search, setSearch] = useState('');
-  const [customer, setCustomer] = useState('');
-  const [valuePaid, setValuePaid] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
-  const [showSearchResults, setShowSearchResults] = useState(false);
+  const showSearchResults = search.length > 0;
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', search],
     queryFn: () => fetchProducts(search),
     enabled: !!search,
   });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+    reset,
+  } = useForm({
+    resolver: yupResolver(saleSchema),
+    context: {
+      totalAmount: selectedProducts.reduce(
+        (total, product) => total + product.unit_price * product.quantity,
+        0,
+      ),
+    },
+    defaultValues: {
+      customerName: '',
+      valuePaid: 0,
+    },
+  });
+
+  const quantity = useMemo(
+    () =>
+      selectedProducts.reduce(
+        (total, product) => total + (product.quantity || 0),
+        0,
+      ),
+    [selectedProducts],
+  );
 
   const handleAddProduct = (product: Product) => {
     const productExists = selectedProducts.find(
@@ -87,13 +94,12 @@ export default function SaleScreen() {
       const productToAdd = {
         ...product,
         quantity: 1,
-        unit_price: product.sale_price,
+        unit_price: product.sale_price || 0,
       };
-      setSelectedProducts(prev => [...prev, productToAdd]);
+      setSelectedProducts(prev => [productToAdd, ...prev]);
     }
 
     setSearch('');
-    setShowSearchResults(false);
   };
 
   const incrementQuantity = (productCode: string) => {
@@ -131,8 +137,6 @@ export default function SaleScreen() {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['products_list', ''] });
       setSelectedProducts([]);
-      setCustomer('');
-      setValuePaid('');
       toast.show('Tudo certo!', {
         message: 'Dados salvos com sucesso!',
       });
@@ -141,171 +145,140 @@ export default function SaleScreen() {
       toast.show('Erro!', {
         message: 'Falha ao finalizar a venda!',
       });
-      console.log(error);
     },
   });
 
-  const handleFinalizeSale = () => {
-    const saleData = {
-      total_amount: totalAmount,
-      customer_name: customer,
-      value_paid: valuePaid,
-    };
-    mutation.mutate({ saleData, saleProducts: selectedProducts });
+  const handleFinalizeSale: SubmitHandler<SaleFormValues> = async data => {
+    try {
+      const saleData = {
+        customer_name: data.customerName,
+        value_paid: Number(data.valuePaid) / 100,
+        total_amount: totalAmount,
+      };
+
+      await mutation.mutateAsync({
+        saleData,
+        saleProducts: selectedProducts,
+      });
+
+      reset();
+      setSelectedProducts([]);
+    } catch (error) {
+      console.error('Erro ao finalizar a venda');
+    }
   };
 
   return (
     <YStack padding="$4" flex={1} backgroundColor="$background">
-      <Text htmlFor="customer" fontSize={12} marginBottom={5}>
-        Cliente
-      </Text>
-      <Input
+      <FormField
+        control={control}
+        name="customerName"
+        label="Cliente"
         placeholder="Nome do cliente"
-        value={customer}
-        onChangeText={setCustomer}
         autoCapitalize="words"
         autoCorrect={false}
-        returnKeyType="next"
       />
-      <Spacer size={10} />
-      <Text htmlFor="customer" fontSize={12} marginBottom={5}>
-        Valor pago
-      </Text>
-      <Input
-        placeholder="Valor pago"
-        value={valuePaid}
-        onChangeText={setValuePaid}
-        keyboardType="numeric"
-        autoCorrect={false}
-        returnKeyType="next"
+      <CurrencyFormField
+        name="valuePaid"
+        control={control}
+        label="Valor pago"
       />
       <Label fontSize={'$7'} marginTop={'$3'}>
         Produtos:
       </Label>
-      <Input
+      <SearchField
+        name="search"
         placeholder="Buscar produto por nome ou código"
         value={search}
-        autoCapitalize="characters"
-        autoCorrect={false}
-        onChangeText={text => {
+        onSearch={text => {
           setSearch(text);
-          setShowSearchResults(true);
         }}
       />
       <Spacer size={10} />
       {showSearchResults && search && (
         <YStack
           position="absolute"
-          top={250}
+          top={256}
           left={18}
           right={18}
-          borderWidth={1}
-          backgroundColor={'$borderColor'}
-          borderColor="$borderColor"
-          maxHeight={300}
-          zIndex={10}
+          borderInlineWidth={1}
+          borderBottomWidth={3}
+          borderColor="$borderColorHover"
+          backgroundColor={'$background'}
+          elevation={10}
+          maxHeight={'65%'}
+          zIndex={100}
         >
-          {isLoading ? (
-            <Text paddingVertical="$2" paddingHorizontal="$2">
-              Carregando produtos...
-            </Text>
-          ) : (
-            <FlatList
-              data={products}
-              keyExtractor={item => item.product_code}
-              renderItem={({ item }) => (
-                <ListItem
-                  key={item.product_code}
-                  onPress={() => handleAddProduct(item)}
-                  borderBottomWidth={1}
-                  borderColor="$borderColor"
-                  paddingHorizontal="$3"
-                  paddingVertical="$2"
-                  justifyContent="space-between"
-                  gap="$2"
-                  hoverTheme
-                  pressTheme
-                >
-                  <YStack flex={1}>
-                    <Text fontWeight="400" fontSize={10} color={'gray'}>
-                      {item.product_code}
-                    </Text>
-                    <Text fontWeight="500">{item.product_name}</Text>
-                    <Text marginTop="$2">
-                      Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}
-                    </Text>
-                  </YStack>
-                  <YStack justifyContent="center" alignItems="center">
-                    <Text fontWeight={'300'} fontSize={12}>
-                      ESTOQUE
-                    </Text>
-                    <Text fontSize={22} fontWeight={'500'}>
-                      {item.stock_quantity}
-                    </Text>
-                  </YStack>
-                </ListItem>
-              )}
-            />
-          )}
+          <FlatList
+            data={products}
+            keyExtractor={item => item.product_code}
+            refreshing={isLoading}
+            renderItem={({ item }) => (
+              <ProductListItem item={item} onPress={handleAddProduct} />
+            )}
+            ListEmptyComponent={
+              <EmptyList
+                icon="search"
+                title="Nenhum produto encontrado"
+                message="Tente buscar com outro termo"
+              />
+            }
+            ItemSeparatorComponent={() => <Separator height={2} />}
+            getItemLayout={(data, index) => ({
+              length: 100,
+              offset: 100 * index,
+              index,
+            })}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+          />
         </YStack>
       )}
       <FlatList
         data={selectedProducts}
-        keyExtractor={item => item.product_code}
+        keyExtractor={item => item.product_code!}
         ItemSeparatorComponent={() => <Spacer size={5} />}
-        ListEmptyComponent={() => (
-          <Card
-            justifyContent="center"
-            alignItems="center"
-            padding={20}
-            bordered
-          >
-            <Feather
-              name="shopping-cart"
-              size={24}
-              color={theme.color9.get()}
-            />
-            <Label>Nenhum produto adicionado.</Label>
-          </Card>
-        )}
         renderItem={({ item }) => (
-          <ListItem
-            key={item.product_code}
-            borderWidth={1}
-            radiused
-            padding="$3"
-            gap="$1"
-          >
-            <YStack flex={1} gap="$2">
-              <Text>{item.product_name}</Text>
-              <Text>
-                Total: R$ {(item.unit_price * item.quantity).toFixed(2)}
-              </Text>
-            </YStack>
-            <XStack gap="$2" alignItems="center">
-              <Button onPress={() => decrementQuantity(item.product_code)}>
-                -
-              </Button>
-              <Text>{item.quantity.toString().padStart(2, '0')}</Text>
-              <Button onPress={() => incrementQuantity(item.product_code)}>
-                +
-              </Button>
-            </XStack>
-          </ListItem>
+          <CartItem
+            item={item}
+            onIncrement={incrementQuantity}
+            onDecrement={decrementQuantity}
+          />
         )}
+        ListEmptyComponent={
+          <EmptyList
+            icon="shopping-cart"
+            title="Nenhum produto adicionado"
+            message="Adicione produtos ao carrinho"
+          />
+        }
+        getItemLayout={(data, index) => ({
+          length: 80,
+          offset: 80 * index,
+          index,
+        })}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
+      <Spacer size={10} />
+      <Card padding="$2" bordered radiused gap={10}>
+        <XStack justifyContent="space-between">
+          <Text color="$color10">Total de itens:</Text>
+          <Text color="$color10">{quantity}</Text>
+        </XStack>
 
-      <Card padding="$2" bordered radiused>
-        <Label fontSize="$8" textAlign="right">
-          Total: R$ {totalAmount.toFixed(2)}
-        </Label>
+        <Text fontSize="$5" textAlign="right">
+          Total: {formatCurrency(totalAmount)}
+        </Text>
 
         <Button
-          onPress={handleFinalizeSale}
-          disabled={!allowFinish}
-          theme={allowFinish ? 'active' : 'gray'}
+          onPress={handleSubmit(handleFinalizeSale)}
+          disabled={isSubmitting || !allowFinish}
+          theme={isSubmitting || !allowFinish ? 'gray_active' : 'active'}
         >
-          Finalizar Venda
+          {isSubmitting ? 'Finalizando...' : 'Finalizar Venda'}
         </Button>
       </Card>
     </YStack>

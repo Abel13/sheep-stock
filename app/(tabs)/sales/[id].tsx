@@ -11,12 +11,19 @@ import {
   Input,
   Button,
   useTheme,
+  Separator,
+  Spinner,
 } from 'tamagui';
 import { FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useToastController } from '@tamagui/toast';
+import { formatCurrency } from '@/utils/currency';
+import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { SaleFormValues, saleSchema } from '@/schemas/saleSchema';
+import { FormField } from '@/components/molecules/FormField/FormField';
 
-// Função para buscar detalhes da venda
 const fetchSaleDetails = async ({ queryKey }) => {
   const [, saleId] = queryKey;
 
@@ -67,15 +74,13 @@ const updateCustomer = async ({
 };
 
 export default function SaleDetails() {
+  const theme = useTheme();
+
   const queryClient = useQueryClient();
   const toast = useToastController();
 
   const { id } = useLocalSearchParams();
   const saleId = id?.toString() || '';
-  const theme = useTheme();
-
-  const [customer, setCustomer] = useState('');
-  const [valuePaid, setValuePaid] = useState('');
 
   const { data, error, isLoading } = useQuery({
     queryKey: ['saleDetails', saleId],
@@ -97,64 +102,88 @@ export default function SaleDetails() {
     },
   });
 
-  const handleSaveCustomer = () => {
+  const {
+    control,
+    getValues,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue,
+  } = useForm({
+    resolver: yupResolver(saleSchema),
+    defaultValues: {
+      customerName: '',
+      valuePaid: 0,
+    },
+  });
+
+  const handleSaveCustomer: SubmitHandler<SaleFormValues> = data => {
     mutation.mutate({
-      customerName: customer,
-      valuePaid: Number(valuePaid),
-      saleId: saleId,
+      customerName: data.customerName,
+      valuePaid: data.valuePaid,
+      saleId,
     });
   };
 
   useEffect(() => {
     if (data) {
-      setCustomer(sale.customer_name);
-      setValuePaid((sale.value_paid || 0)?.toString());
+      setValue('customerName', data.sale.customer_name || '');
+      setValue('valuePaid', data.sale.value_paid);
     }
   }, [data]);
 
   if (isLoading)
     return (
-      <YStack padding="$4" backgroundColor="$background">
-        <Text>Loading...</Text>
+      <YStack
+        flex={1}
+        padding="$4"
+        paddingTop="$10"
+        backgroundColor="$background"
+        alignItems="center"
+        gap={10}
+      >
+        <Spinner size="large" color="$lavender" />
+        <Text>Carregando venda...</Text>
       </YStack>
     );
 
-  if (error)
+  if (error || !data)
     return (
-      <YStack padding="$4" backgroundColor="$background">
-        <Text color="$red10">Error: {error.message}</Text>
+      <YStack flex={1} padding="$4" backgroundColor="$background">
+        <Text color="$red10">Error: {error?.message}</Text>
       </YStack>
     );
-
-  const { sale, items } = data;
 
   return (
     <YStack flex={1} padding="$4" backgroundColor="$background">
       <YStack marginBottom="$4" gap={5}>
         <Text fontSize={8} marginBottom="$2">
-          ID da Venda: {sale.id}
+          ID da Venda: {data.sale.id}
         </Text>
         <Text fontSize={12} fontWeight={'600'}>
-          {new Date(sale.sale_date).toLocaleDateString()}
+          {new Date(data.sale.sale_date || '').toLocaleDateString()}
         </Text>
         <Text fontWeight={'bold'} fontSize={22}>
-          Total: R$ {sale.total_amount?.toFixed(2)}
+          Total: {formatCurrency(data.sale.total_amount)}
         </Text>
-        <YStack gap={5} marginTop={'$4'}>
-          <Text marginTop="$2">Cliente</Text>
-          <Input value={customer} onChangeText={setCustomer} />
-          <Text marginTop="$2">Valor Pago</Text>
-          <Input
-            value={valuePaid}
-            onChangeText={value => setValuePaid(value)}
+        <YStack marginTop={'$2'}>
+          <FormField
+            control={control}
+            name="customerName"
+            label="Cliente"
+            placeholder="Nome do cliente"
+            autoCapitalize="words"
+            autoCorrect={false}
           />
-          <Button variant="outlined" onPress={handleSaveCustomer}>
+          <CurrencyFormField
+            name="valuePaid"
+            control={control}
+            label="Valor pago"
+          />
+          <YStack margin={10} />
+          <Button onPress={handleSubmit(handleSaveCustomer)} theme={'active'}>
             <Button.Icon>
-              <Ionicons
-                name="save-outline"
-                size={24}
-                color={theme.blue8Light.get()}
-              />
+              <Ionicons name="save-outline" size={24} />
             </Button.Icon>
           </Button>
         </YStack>
@@ -164,8 +193,8 @@ export default function SaleDetails() {
         Itens
       </Text>
       <FlatList
-        data={items}
-        keyExtractor={item => item.product_code}
+        data={data.items}
+        keyExtractor={item => item.product_code!}
         ItemSeparatorComponent={() => <Spacer size="$1" />}
         renderItem={({ item }) => (
           <Card
@@ -179,7 +208,7 @@ export default function SaleDetails() {
             <Text color="$gray10Dark" fontSize={8}>
               {item.product_code}
             </Text>
-            <Text fontSize={12}>{item.products.product_name}</Text>
+            <Text fontSize={12}>{item.products!.product_name}</Text>
             <XStack justifyContent="space-between" marginTop="$3">
               <YStack alignItems="center">
                 <Text fontWeight={'600'}>QTD:</Text>
@@ -187,14 +216,16 @@ export default function SaleDetails() {
               </YStack>
               <YStack alignItems="center">
                 <Text fontWeight={'600'}>PREÇO UNIT.:</Text>
-                <Text fontWeight={'600'}>R$ {item.unit_price?.toFixed(2)}</Text>
+                <Text fontWeight={'600'}>
+                  {formatCurrency(item.unit_price)}
+                </Text>
               </YStack>
               <YStack alignItems="flex-end">
                 <Text fontSize="$2" color="$colorSubtle">
                   TOTAL
                 </Text>
                 <Text fontSize="$4" fontWeight={'600'}>
-                  R$ {item.total_price?.toFixed(2)}
+                  {formatCurrency(item.total_price!)}
                 </Text>
               </YStack>
             </XStack>

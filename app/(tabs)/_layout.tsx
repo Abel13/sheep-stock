@@ -9,16 +9,16 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.color12.get(),
-        tabBarInactiveTintColor: theme.color8.get(),
+        tabBarActiveTintColor: theme.color12?.val,
+        tabBarInactiveTintColor: theme.color8?.val,
         tabBarStyle: {
-          backgroundColor: theme.background.get(),
+          backgroundColor: theme.background?.val,
           borderTopWidth: 0,
         },
         headerStyle: {
-          backgroundColor: theme.background.get(),
+          backgroundColor: theme.background?.val,
         },
-        headerTintColor: theme.color12.get(),
+        headerTintColor: theme.color12?.val,
       }}
     >
       <Tabs.Screen
@@ -63,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="orders"
         options={{
-          title: 'Novo Pedido',
+          title: 'Em Falta',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="receipt-outline" color={color} size={size} />
           ),

@@ -20,8 +20,27 @@ import {
   Image,
   useTheme,
   View,
+  Spinner,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
+import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { FormField } from '@/components/molecules/FormField/FormField';
+import { Resolver } from 'react-hook-form';
+import { formatCurrency } from '@/utils/currency';
+
+interface UpdateProduct {
+  sale_price: number;
+}
+
+const productSchema = yup.object().shape({
+  sale_price: yup
+    .number()
+    .required('Sale price is required')
+    .min(0, 'Sale price must be positive'),
+});
 
 // Configuração do S3
 AWS.config.update({
@@ -68,23 +87,38 @@ const updateProductDetails = async ({
   salePrice,
   minimumStock,
   discontinued,
-  imageUrl,
 }: {
   productId: string;
   salePrice: number;
   minimumStock: number;
   discontinued: boolean;
-  imageUrl: string;
 }) => {
-  const { error } = await supabase
+  const { error, data } = await supabase
     .from('products')
     .update({
       sale_price: salePrice,
       minimum_stock: minimumStock,
       discontinued,
+    })
+    .eq('product_code', productId);
+
+  if (error) throw new Error(error.message);
+};
+
+const updateProductImage = async ({
+  productId,
+  imageUrl,
+}: {
+  productId: string;
+  imageUrl: string;
+}) => {
+  const { error } = await supabase
+    .from('products')
+    .update({
       image_url: imageUrl,
     })
     .eq('product_code', productId);
+
   if (error) throw new Error(error.message);
 };
 
@@ -95,7 +129,6 @@ export default function ProductEdit() {
   const router = useRouter();
   const theme = useTheme() || 'light';
 
-  const [salePrice, setSalePrice] = useState<string>('');
   const [minimumStock, setMinimumStock] = useState<number>(0);
   const [discontinued, setDiscontinued] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -131,25 +164,49 @@ export default function ProductEdit() {
   const mutation = useMutation({
     mutationFn: updateProductDetails,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+      queryClient.invalidateQueries({ queryKey: ['products_list', ''] });
+      queryClient.invalidateQueries({ queryKey: ['lowStockProducts'] });
       toast.show('Tudo certo!', {
         message: 'Dados salvos com sucesso!',
       });
+      router.dismissTo('/(tabs)/products');
+    },
+    onError: () => {},
+  });
+
+  const mutationImage = useMutation({
+    mutationFn: updateProductImage,
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['product', id] });
       queryClient.invalidateQueries({ queryKey: ['products_list', ''] });
-      router.back();
+
+      toast.show('Tudo certo!', {
+        message: 'Dados salvos com sucesso!',
+      });
+    },
+    onError: () => {},
+  });
+
+  const {
+    handleSubmit,
+    control,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<UpdateProduct>({
+    resolver: yupResolver(productSchema),
+    defaultValues: {
+      sale_price: 0,
     },
   });
 
-  const handleUpdate = () => {
-    const parsedPrice = parseFloat(salePrice);
-    if (isNaN(parsedPrice)) return;
-
+  const handleUpdate = (data: UpdateProduct) => {
     mutation.mutate({
       productId: id as string,
-      salePrice: parsedPrice,
+      salePrice: data.sale_price,
       minimumStock,
       discontinued,
-      imageUrl: imageUrl || '',
     });
   };
 
@@ -159,7 +216,7 @@ export default function ProductEdit() {
     if (!permissionResult.granted) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 1,
     });
@@ -181,11 +238,8 @@ export default function ProductEdit() {
         const publicUrl = data.Location;
         setImageUrl(publicUrl);
 
-        mutation.mutate({
+        mutationImage.mutate({
           productId: id as string,
-          salePrice: parseFloat(salePrice),
-          minimumStock,
-          discontinued,
           imageUrl: publicUrl,
         });
       } catch (error) {
@@ -224,7 +278,7 @@ export default function ProductEdit() {
 
   useEffect(() => {
     if (product) {
-      setSalePrice(product.sale_price?.toString() || '');
+      setValue('sale_price', product.sale_price || 0);
       setMinimumStock(product.minimum_stock || 0);
       setDiscontinued(product.discontinued || false);
       setImageUrl(product.image_url || null);
@@ -233,10 +287,19 @@ export default function ProductEdit() {
 
   if (productLoading)
     return (
-      <YStack flex={1} padding="$4" backgroundColor="$background">
-        <Text>Loading...</Text>
+      <YStack
+        flex={1}
+        padding="$4"
+        paddingTop="$10"
+        backgroundColor="$background"
+        alignItems="center"
+        gap={10}
+      >
+        <Spinner size="large" color="$lavender" />
+        <Text>Carregando produto...</Text>
       </YStack>
     );
+
   if (productError || !product)
     return (
       <YStack flex={1} padding="$4" backgroundColor="$background">
@@ -263,7 +326,7 @@ export default function ProductEdit() {
         marginBottom="$6"
       >
         {imageUrl ? (
-          <View flex={1} gap={5}>
+          <View flex={1}>
             <Image
               source={{ uri: imageUrl }}
               width={100}
@@ -272,16 +335,22 @@ export default function ProductEdit() {
               borderWidth={1}
               borderColor={'$borderColor'}
             />
-            <Feather
-              name="edit"
-              size={24}
-              color={theme.color9.get()}
+            <Button
               onPress={pickImage}
-              style={{ alignSelf: 'flex-end' }}
-            />
+              height={30}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Feather
+                name="edit"
+                color={theme.color10?.val}
+                size={16}
+                style={{ alignSelf: 'center' }}
+              />
+            </Button>
           </View>
         ) : (
-          <Feather name="image" size={24} color={theme.color9.get()} />
+          <Feather name="image" size={24} color={theme.color9?.val} />
         )}
       </Card>
 
@@ -289,40 +358,42 @@ export default function ProductEdit() {
         <YStack gap="$2">
           {avgPrice !== null && (
             <View style={{ marginVertical: 10 }}>
-              <Text fontSize={12} color={theme.color11.get()}>
-                Preço médio de compra: R$ {(avgPrice || 0).toFixed(2)}
+              <Text fontSize={12} color={theme.color11?.val}>
+                Preço médio de compra: {formatCurrency(avgPrice || 0)}
               </Text>
-              <Text fontSize={12} color={theme.color9.get()}>
+              <Text fontSize={12} color={theme.color9?.val}>
                 Preço de venda sugerido (
                 {suggestedPrice === null
                   ? '120%'
                   : `${(((suggestedPrice - avgPrice) / avgPrice) * 100 || 0).toFixed(0)}% `}
-                de lucro): R${' '}
-                {suggestedPrice !== null
-                  ? (suggestedPrice || 0).toFixed(2)
-                  : ((avgPrice || 0) * 2.2).toFixed(2)}
+                de lucro):{' '}
+                {formatCurrency(
+                  suggestedPrice !== null
+                    ? suggestedPrice || 0
+                    : (avgPrice || 0) * 2.2,
+                )}
               </Text>
             </View>
           )}
-          <Text>Preço de venda:</Text>
-          <Input
-            placeholder="Insira o novo preço"
-            value={salePrice}
-            onChangeText={text =>
-              setSalePrice(text.replace(',', '.').replace(/[^0-9.]/g, ''))
-            }
-            keyboardType="numeric"
+          <CurrencyFormField
+            name="sale_price"
+            control={control}
+            label="Preço de venda"
           />
         </YStack>
 
         <YStack gap="$2">
           <Text>Quantidade mínima:</Text>
           <XStack gap="$2" alignItems="center">
-            <Button onPress={decrementQuantity}>-</Button>
+            <Button onPress={decrementQuantity} color={theme.color10?.val}>
+              -
+            </Button>
             <Text fontSize={'$4'}>
               {minimumStock.toString().padStart(2, '0')}
             </Text>
-            <Button onPress={incrementQuantity}>+</Button>
+            <Button onPress={incrementQuantity} color={theme.color10?.val}>
+              +
+            </Button>
           </XStack>
         </YStack>
 
@@ -332,12 +403,14 @@ export default function ProductEdit() {
             checked={discontinued}
             onCheckedChange={setDiscontinued}
           >
-            <Switch.Thumb animation="quicker" />
+            <Switch.Thumb animation="fast" />
           </Switch>
           <Text>Produto descontinuado</Text>
         </XStack>
 
-        <Button onPress={handleUpdate}>Salvar</Button>
+        <Button onPress={handleSubmit(handleUpdate)} theme={'active'}>
+          Salvar
+        </Button>
       </YStack>
 
       <Modal visible={modalVisible} transparent={true} animationType="fade">
@@ -345,8 +418,8 @@ export default function ProductEdit() {
           flex={1}
           alignItems="center"
           justifyContent="flex-start"
-          backgroundColor="#010101e0"
           paddingTop="$11"
+          backgroundColor={'$background'}
           paddingHorizontal="$4"
         >
           <Button
@@ -355,7 +428,7 @@ export default function ProductEdit() {
             circular
             alignSelf="flex-end"
           >
-            <Feather name="x" size={24} color={theme.color9.get()} />
+            <Feather name="x" size={24} color={theme.color10?.val} />
           </Button>
           <Image
             source={{ uri: imageUrl as string }}
@@ -366,9 +439,9 @@ export default function ProductEdit() {
           <Button
             onPress={openShareDialogAsync}
             marginTop="$4"
-            backgroundColor="$background"
+            theme={'active'}
           >
-            <Feather name="share" size={20} color={theme.color9.get()} />
+            <Feather name="share" size={20} color={theme.color.val} />
             <Text marginLeft="$2">Compartilhar</Text>
           </Button>
         </YStack>

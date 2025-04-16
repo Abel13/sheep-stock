@@ -13,7 +13,13 @@ import {
   Spacer,
   Input,
   Image,
+  Separator,
+  Spinner,
+  VisuallyHidden,
 } from 'tamagui';
+import { SearchField } from '@/components/molecules/SearchField';
+import { useForm } from 'react-hook-form';
+import { formatCurrency } from '@/utils/currency';
 
 // Função para buscar produtos
 const fetchProducts = async (search: string) => {
@@ -22,6 +28,7 @@ const fetchProducts = async (search: string) => {
     .select('*')
     .neq('stock_quantity', 0)
     .order('product_name');
+
   if (search) {
     query = query.or(
       `product_name.ilike.%${search}%,product_code.ilike.%${search}%`,
@@ -32,7 +39,6 @@ const fetchProducts = async (search: string) => {
   return data;
 };
 
-// Componente de item para a lista, otimizado com React.memo
 const ProductItem = memo(
   ({ item, onPress }: { item: Product; onPress: (code: string) => void }) => (
     <Card
@@ -72,7 +78,7 @@ const ProductItem = memo(
             {item.product_name}
           </Text>
           <Text marginTop="$3" fontSize="$3">
-            Preço de venda: R$ {(item.sale_price || 0).toFixed(2)}
+            Preço de venda: {formatCurrency(item.sale_price || 0)}
           </Text>
         </YStack>
         <YStack alignItems="center" justifyContent="center">
@@ -100,6 +106,8 @@ export default function Products() {
     queryFn: () => fetchProducts(search),
   });
 
+  const { control } = useForm({});
+
   const handlePress = (productCode: string) => {
     setSearch('');
     router.push({
@@ -122,15 +130,15 @@ export default function Products() {
       paddingTop="$2"
       backgroundColor="$background"
     >
-      <Input
-        placeholder="Procure itens por nome ou código"
+      <SearchField
+        name="search"
         value={search}
-        onChangeText={setSearch}
-        borderBottomWidth="$0.5"
-        paddingVertical="$3"
-        marginBottom="$4"
+        placeholder="Buscar produto por nome ou código"
+        onSearch={text => {
+          setSearch(text);
+        }}
       />
-
+      <Separator margin={10} />
       <FlatList
         data={products}
         keyExtractor={(item: Product) => item.product_code}
@@ -141,12 +149,12 @@ export default function Products() {
           });
         }}
         refreshing={isLoading}
-        initialNumToRender={10}
-        maxToRenderPerBatch={5}
+        initialNumToRender={16}
+        maxToRenderPerBatch={16}
         windowSize={5}
         getItemLayout={(data, index) => ({
-          length: 80,
-          offset: 80 * index,
+          length: 100,
+          offset: 100 * index,
           index,
         })}
         ItemSeparatorComponent={() => <Spacer size="$2" />}

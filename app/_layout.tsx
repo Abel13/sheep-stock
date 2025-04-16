@@ -5,17 +5,16 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Slot } from 'expo-router';
-import { createTamagui, TamaguiProvider, YStack } from 'tamagui';
 import {
   Toast,
   ToastProvider,
   ToastViewport,
   useToastState,
 } from '@tamagui/toast';
-import defaultConfig from '@tamagui/config/v3';
+import { TamaguiProvider, YStack } from 'tamagui';
+import config from '../tamagui.config';
 import { StatusBar, useColorScheme } from 'react-native';
 
-const config = createTamagui(defaultConfig);
 const queryClient = new QueryClient();
 
 type Conf = typeof config;

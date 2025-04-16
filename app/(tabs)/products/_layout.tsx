@@ -10,9 +10,9 @@ export default function ProductStackLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: theme.background.get(),
+          backgroundColor: theme.background?.val,
         },
-        headerTintColor: theme.color12.get(),
+        headerTintColor: theme.color12?.val,
       }}
     >
       <Stack.Screen

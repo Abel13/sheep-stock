@@ -11,6 +11,7 @@ import {
 } from 'tamagui';
 import { FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
+import { formatCurrency } from '@/utils/currency';
 
 // Função para buscar ordens de compra
 const fetchOrders = async () => {
@@ -38,16 +39,19 @@ export default function OrderList() {
     return (
       <YStack
         flex={1}
-        justifyContent="center"
-        alignItems="center"
+        padding="$4"
+        paddingTop="$10"
         backgroundColor="$background"
+        alignItems="center"
+        gap={10}
       >
-        <Spinner size="large" />
+        <Spinner size="large" color="$lavender" />
+        <Text>Carregando pedidos...</Text>
       </YStack>
     );
   if (error)
     return (
-      <YStack padding="$4" backgroundColor="$background">
+      <YStack flex={1} padding="$4" backgroundColor="$background">
         <Text color="$red10">Erro: {error.message}</Text>
       </YStack>
     );
@@ -58,7 +62,7 @@ export default function OrderList() {
         marginBottom={'$4'}
         onPress={() => router.push({ pathname: '/(tabs)/purchases/add' })}
       >
-        Nova Compra
+        Novo Pedido
       </Button>
       <FlatList
         data={orders}
@@ -72,14 +76,14 @@ export default function OrderList() {
               </Text>
               <XStack gap="$2">
                 <Text fontSize={10} color="$color10">
-                  {new Date(item.purchase_date).toLocaleDateString()}
+                  {new Date(item.purchase_date!).toLocaleDateString()}
                 </Text>
                 <Text fontSize={10} color="$color10">
                   {item.total_items} itens
                 </Text>
               </XStack>
               <Text textAlign="right" fontSize="$5" fontWeight="300">
-                R$ {(item.total_value || 0).toFixed(2)}
+                {formatCurrency(item.total_value || 0)}
               </Text>
             </YStack>
           </ListItem>

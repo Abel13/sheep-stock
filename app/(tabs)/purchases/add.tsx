@@ -17,6 +17,7 @@ import { FlatList } from 'react-native';
 import { useToastController } from '@tamagui/toast';
 import { ProductXML, PurchaseXML } from '@/types/PurchaseXML';
 import { Ionicons } from '@expo/vector-icons';
+import { formatCurrency } from '@/utils/currency';
 
 export default function PurchaseUploadScreen() {
   const theme = useTheme();
@@ -160,8 +161,8 @@ export default function PurchaseUploadScreen() {
           <Button.Icon>
             <Ionicons
               name="cloud-upload-outline"
-              size={24}
-              color={theme.blue8Light.get()}
+              size={18}
+              color={theme.color.val}
             />
           </Button.Icon>
           {isUploading ? 'Enviando...' : 'Carregar arquivo'}
@@ -208,19 +209,13 @@ export default function PurchaseUploadScreen() {
             <YStack flex={1} gap="$2">
               <Text>{item.product_name}</Text>
               <Text>
-                Total: R$ {(item.unit_price * item.quantity).toFixed(2)}
+                Total: {formatCurrency(item.unit_price * item.quantity)}
               </Text>
             </YStack>
             <XStack gap="$2" alignItems="center" marginInline="$2">
-              {/* <Button onPress={() => decrementQuantity(item.product_code)}>
-                -
-              </Button> */}
               <Text fontSize={'$4'}>
                 {item.quantity.toString().padStart(2, '0')}
               </Text>
-              {/* <Button onPress={() => incrementQuantity(item.product_code)}>
-                +
-              </Button> */}
             </XStack>
           </ListItem>
         )}

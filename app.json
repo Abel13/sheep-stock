@@ -9,17 +9,25 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+    "androidStatusBar": {
+      "backgroundColor": "#5B6B3C",
+      "translucent": true
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#F4F4F4"
+    },
     "splash": {
+      "backgroundColor": "#F4F4F4",
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.abelb13.sheepstock",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Este aplicativo requer acesso à biblioteca de fotos para permitir o upload de imagens.",
-        "NSCameraUsageDescription": "Este aplicativo requer acesso à câmera para capturar fotos diretamente."
+        "NSCameraUsageDescription": "Este aplicativo requer acesso à câmera para capturar fotos diretamente.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -29,8 +37,6 @@
       },
       "package": "com.abelb13.sheepstock",
       "permissions": [
-        "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_NETWORK_STATE",
         "android.permission.RECORD_AUDIO"
       ]

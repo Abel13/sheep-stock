@@ -10,21 +10,21 @@ export default function TabLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: theme.background.get(),
+          backgroundColor: theme.background?.val,
         },
-        headerTintColor: theme.color12.get(),
+        headerTintColor: theme.color12?.val,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          title: 'Compras',
+          title: 'Pedidos',
         }}
       />
       <Stack.Screen
         name="add"
         options={{
-          title: 'Nova Compra',
+          title: 'Novo Pedido',
         }}
       />
     </Stack>
