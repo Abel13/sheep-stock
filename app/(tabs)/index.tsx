@@ -320,7 +320,7 @@ export default function SaleScreen() {
           <CameraViewComponent
             style={{ width: '100%', height: 100 }}
             barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'qr', 'code128'],
+              barcodeTypes: ['ean13'],
             }}
             onBarcodeScanned={handleScanResult}
           />
