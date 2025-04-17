@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
 import { Product } from '@/types/Product';
@@ -16,7 +16,8 @@ import {
   Separator,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
-import { FlatList } from 'react-native';
+import { Barcode } from '@tamagui/lucide-icons';
+import { FlatList, Modal } from 'react-native';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { saleSchema, SaleFormValues } from '@/schemas/saleSchema';
 import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
@@ -28,6 +29,9 @@ import { SearchField } from '@/components/molecules/SearchField';
 import { ProductListItem } from '@/components/molecules/ProductListItem';
 import { CartItem } from '@/components/molecules/CartItem';
 import { EmptyList } from '@/components/molecules/EmptyList';
+import { Feather } from '@expo/vector-icons';
+import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
+import { BarcodeScanningResult } from 'expo-camera';
 
 const fetchProducts = async (search: string): Promise<Product[]> => {
   try {
@@ -46,10 +50,14 @@ const fetchProducts = async (search: string): Promise<Product[]> => {
 export default function SaleScreen() {
   const queryClient = useQueryClient();
   const toast = useToastController();
+  const theme = useTheme() || 'light';
 
   const [search, setSearch] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const showSearchResults = search.length > 0;
+
+  const { hasPermission, CameraViewComponent } = useBarcodeScanner();
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', search],
@@ -152,7 +160,7 @@ export default function SaleScreen() {
     try {
       const saleData = {
         customer_name: data.customerName,
-        value_paid: Number(data.valuePaid) / 100,
+        value_paid: Number(data.valuePaid),
         total_amount: totalAmount,
       };
 
@@ -166,6 +174,11 @@ export default function SaleScreen() {
     } catch (error) {
       console.error('Erro ao finalizar a venda');
     }
+  };
+
+  const handleScanResult = (result: BarcodeScanningResult) => {
+    setShowScanner(false);
+    setSearch(result.data);
   };
 
   return (
@@ -186,21 +199,26 @@ export default function SaleScreen() {
       <Label fontSize={'$7'} marginTop={'$3'}>
         Produtos:
       </Label>
-      <SearchField
-        name="search"
-        placeholder="Buscar produto por nome ou código"
-        value={search}
-        onSearch={text => {
-          setSearch(text);
-        }}
-      />
+      <XStack gap={5} flex={1}>
+        <YStack width={'100%'} flex={1}>
+          <SearchField
+            name="search"
+            placeholder="Buscar produto por nome ou código"
+            value={search}
+            onSearch={text => {
+              setSearch(text);
+            }}
+          />
+        </YStack>
+        <Button icon={<Barcode />} onPress={() => setShowScanner(true)} />
+      </XStack>
       <Spacer size={10} />
       {showSearchResults && search && (
         <YStack
           position="absolute"
-          top={256}
+          top={258}
           left={18}
-          right={18}
+          right={77}
           borderInlineWidth={1}
           borderBottomWidth={3}
           borderColor="$borderColorHover"
@@ -281,6 +299,33 @@ export default function SaleScreen() {
           {isSubmitting ? 'Finalizando...' : 'Finalizar Venda'}
         </Button>
       </Card>
+
+      <Modal visible={showScanner} animationType="fade">
+        <YStack
+          flex={1}
+          alignItems="center"
+          justifyContent="flex-start"
+          paddingTop="$11"
+          backgroundColor={'$background'}
+        >
+          <Button
+            onPress={() => setShowScanner(false)}
+            marginBottom="$15"
+            circular
+            alignSelf="flex-end"
+            marginRight={'$4'}
+          >
+            <Feather name="x" size={24} color={theme.color10?.val} />
+          </Button>
+          <CameraViewComponent
+            style={{ width: '100%', height: 100 }}
+            barcodeScannerSettings={{
+              barcodeTypes: ['ean13', 'qr', 'code128'],
+            }}
+            onBarcodeScanned={handleScanResult}
+          />
+        </YStack>
+      </Modal>
     </YStack>
   );
 }

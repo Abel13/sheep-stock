@@ -413,7 +413,7 @@ export default function ProductEdit() {
         </Button>
       </YStack>
 
-      <Modal visible={modalVisible} transparent={true} animationType="fade">
+      <Modal visible={modalVisible} animationType="fade">
         <YStack
           flex={1}
           alignItems="center"

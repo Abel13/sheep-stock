@@ -17,7 +17,7 @@
       "backgroundColor": "#F4F4F4"
     },
     "splash": {
-      "backgroundColor": "#F4F4F4",
+      "backgroundColor": "#FFFFFF",
       "image": "./assets/images/splash.png",
       "resizeMode": "contain"
     },
@@ -61,7 +61,15 @@
           "iCloudContainerEnvironment": "Production"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
