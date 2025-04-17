@@ -199,7 +199,7 @@ export default function SaleScreen() {
       <Label fontSize={'$7'} marginTop={'$3'}>
         Produtos:
       </Label>
-      <XStack gap={5} flex={1}>
+      <XStack gap={5}>
         <YStack width={'100%'} flex={1}>
           <SearchField
             name="search"
