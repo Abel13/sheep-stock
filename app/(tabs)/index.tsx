@@ -210,7 +210,11 @@ export default function SaleScreen() {
             }}
           />
         </YStack>
-        <Button icon={<Barcode />} onPress={() => setShowScanner(true)} />
+        <Button onPress={() => setShowScanner(true)}>
+          <Button.Icon>
+            <Barcode />
+          </Button.Icon>
+        </Button>
       </XStack>
       <Spacer size={10} />
       {showSearchResults && search && (
