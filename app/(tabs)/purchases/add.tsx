@@ -12,12 +12,15 @@ import {
   Spacer,
   useTheme,
   View,
+  Card,
+  Spinner,
 } from 'tamagui';
 import { FlatList } from 'react-native';
 import { useToastController } from '@tamagui/toast';
 import { ProductXML, PurchaseXML } from '@/types/PurchaseXML';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '@/utils/currency';
+import { uploadFile } from '@/services/file';
 
 export default function PurchaseUploadScreen() {
   const theme = useTheme();
@@ -27,30 +30,23 @@ export default function PurchaseUploadScreen() {
   const [purchaseData, setPurchaseData] = useState<PurchaseXML>();
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
-  const handlePickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/xml',
-      });
+  const mutation = useMutation({
+    mutationFn: uploadFile,
+    onSuccess: response => {
+      const { data } = response;
+      console.log('VOLTOU', data);
 
-      if (result.canceled) return;
+      if (data) setPurchaseData(data);
 
-      setIsUploading(true);
-      const formData = new FormData();
-      formData.append('file', {
-        uri: result.assets[0].uri,
-        name: result.assets[0].name,
-        type: 'application/xml',
-      });
-
-      mutation.mutate(formData);
-    } catch (error) {
+      setIsUploading(false);
+    },
+    onError: () => {
       setIsUploading(false);
       toast.show('Erro!', {
-        message: 'Falha ao selecionar o arquivo!',
+        message: 'Falha ao enviar o arquivo XML!',
       });
-    }
-  };
+    },
+  });
 
   // const decrementQuantity = productCode => {
   //   setItems(prevItems =>
@@ -72,22 +68,31 @@ export default function PurchaseUploadScreen() {
   //   );
   // };
 
-  const mutation = useMutation({
-    mutationFn: (formData: FormData) => api.post('/upload-via-aroma', formData),
-    onSuccess: response => {
-      const { data } = response;
+  const handlePickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/xml',
+      });
 
-      if (data) setPurchaseData(data);
+      if (result.canceled) return;
 
-      setIsUploading(false);
-    },
-    onError: () => {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', {
+        uri: result.assets[0].uri,
+        name: result.assets[0].name,
+        type: 'application/xml',
+      });
+
+      console.log('APPEND', formData);
+      mutation.mutate(formData);
+    } catch (error) {
       setIsUploading(false);
       toast.show('Erro!', {
-        message: 'Falha ao enviar o arquivo XML!',
+        message: 'Falha ao selecionar o arquivo!',
       });
-    },
-  });
+    }
+  };
 
   const convertDateToISO = dateStr => {
     const [day, month, year] = dateStr.split('/');
@@ -148,25 +153,31 @@ export default function PurchaseUploadScreen() {
     return (
       <YStack
         flex={1}
-        paddingHorizontal="$4"
-        paddingTop="$2"
         backgroundColor="$background"
+        alignItems="center"
+        paddingTop={'$2'}
       >
-        <Text marginBottom="$4">Selecione o XML da nota fiscal da compra</Text>
-        <Button
+        <Card
+          paddingHorizontal="$4"
+          padding="$2"
+          bordered
           onPress={handlePickDocument}
-          variant="outlined"
-          disabled={isUploading}
         >
-          <Button.Icon>
-            <Ionicons
-              name="cloud-upload-outline"
-              size={18}
-              color={theme.color.val}
-            />
-          </Button.Icon>
-          {isUploading ? 'Enviando...' : 'Carregar arquivo'}
-        </Button>
+          <Text marginBottom="$4" color={'$gray10Dark'}>
+            Selecione o XML da nota fiscal da compras
+          </Text>
+
+          <XStack justifyContent="center" gap={'$2'}>
+            <Button.Icon>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={18}
+                color={theme.color.val}
+              />
+            </Button.Icon>
+            {isUploading ? <Spinner /> : <Text>{'Carregar arquivo'}</Text>}
+          </XStack>
+        </Card>
       </YStack>
     );
 

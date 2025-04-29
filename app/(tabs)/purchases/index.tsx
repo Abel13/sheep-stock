@@ -13,7 +13,6 @@ import { FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { formatCurrency } from '@/utils/currency';
 
-// Função para buscar ordens de compra
 const fetchOrders = async () => {
   const { data, error } = await supabase
     .from('orders')

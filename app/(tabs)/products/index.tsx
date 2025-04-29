@@ -21,7 +21,6 @@ import { SearchField } from '@/components/molecules/SearchField';
 import { useForm } from 'react-hook-form';
 import { formatCurrency } from '@/utils/currency';
 
-// Função para buscar produtos
 const fetchProducts = async (search: string) => {
   let query = supabase
     .from('products')
@@ -133,7 +132,7 @@ export default function Products() {
       <SearchField
         name="search"
         value={search}
-        placeholder="Buscar produto por nome ou código"
+        placeholder="Nome ou código do produto"
         onSearch={text => {
           setSearch(text);
         }}

@@ -1,4 +1,3 @@
-import { Alert } from 'react-native';
 import { supabase } from './supabaseClient';
 
 const createSale = async ({

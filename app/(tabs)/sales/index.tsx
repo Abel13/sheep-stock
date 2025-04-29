@@ -6,7 +6,6 @@ import { YStack, XStack, Text, Card, Separator, Spacer } from 'tamagui';
 import { Sale } from '@/types/Sale';
 import { formatCurrency } from '@/utils/currency';
 
-// Função para buscar vendas
 const fetchSales = async () => {
   let query = supabase
     .from('sales')
@@ -17,7 +16,6 @@ const fetchSales = async () => {
   return data;
 };
 
-// Função para agrupar vendas por data e calcular o total de vendas do dia
 const groupSalesByDate = sales => {
   const groupedSales = sales.reduce((acc, sale) => {
     const saleDate = new Date(sale.sale_date).toLocaleDateString();

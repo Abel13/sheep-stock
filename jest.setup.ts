@@ -98,11 +98,6 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({}),
 }));
 
-// Mock react-native's Alert
-jest.mock('react-native/Libraries/Alert/Alert', () => ({
-  alert: jest.fn(),
-}));
-
 // Cleanup after each test
 afterEach(() => {
   cleanup();

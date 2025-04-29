@@ -16,9 +16,9 @@ import {
   Separator,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
-import { Barcode } from '@tamagui/lucide-icons';
+import { Barcode, Printer, Share, Share2 } from '@tamagui/lucide-icons';
 import { FlatList, Modal } from 'react-native';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { get, useForm, type SubmitHandler } from 'react-hook-form';
 import { saleSchema, SaleFormValues } from '@/schemas/saleSchema';
 import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -32,6 +32,22 @@ import { EmptyList } from '@/components/molecules/EmptyList';
 import { Feather } from '@expo/vector-icons';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { BarcodeScanningResult } from 'expo-camera';
+import * as Print from 'expo-print';
+import { shareAsync } from 'expo-sharing';
+
+interface SaleProduct {
+  unit_price: number;
+  quantity: number;
+  product_code: string;
+  stock_quantity: number;
+  average_cost: number | null;
+  discontinued: boolean | null;
+  image_url: string | null;
+  min_stock_quantity: number | null;
+  minimum_stock: number | null;
+  product_name: string | null;
+  sale_price: number | null;
+}
 
 const fetchProducts = async (search: string): Promise<Product[]> => {
   try {
@@ -54,10 +70,19 @@ export default function SaleScreen() {
 
   const [search, setSearch] = useState('');
   const [showScanner, setShowScanner] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [showShare, setShowShare] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<SaleProduct[]>([]);
   const showSearchResults = search.length > 0;
 
   const { hasPermission, CameraViewComponent } = useBarcodeScanner();
+
+  const [selectedPrinter, setSelectedPrinter] = useState();
+
+  const printToFile = async () => {
+    const { uri } = await Print.printToFileAsync({ html });
+    console.log('File has been saved to:', uri);
+    await shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+  };
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', search],
@@ -68,6 +93,7 @@ export default function SaleScreen() {
   const {
     control,
     handleSubmit,
+    getValues,
     formState: { isSubmitting },
     reset,
   } = useForm({
@@ -83,6 +109,23 @@ export default function SaleScreen() {
       valuePaid: 0,
     },
   });
+
+  const html = `
+  <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    </head>
+    <body style="text-align: center;">
+      <img
+        src="https://d30j33t1r58ioz.cloudfront.net/static/guides/sdk.png"
+        style="width: 90vw;"
+      />
+      <h1 style="font-size: 50px; font-family: Helvetica Neue; font-weight: normal;">
+        ${getValues('customerName')}
+      </h1>
+    </body>
+  </html>
+  `;
 
   const quantity = useMemo(
     () =>
@@ -103,6 +146,7 @@ export default function SaleScreen() {
         ...product,
         quantity: 1,
         unit_price: product.sale_price || 0,
+        stock_quantity: product.stock_quantity || 0,
       };
       setSelectedProducts(prev => [productToAdd, ...prev]);
     }
@@ -176,6 +220,8 @@ export default function SaleScreen() {
     }
   };
 
+  const handleShare = useCallback(() => {}, []);
+
   const handleScanResult = (result: BarcodeScanningResult) => {
     setShowScanner(false);
     setSearch(result.data);
@@ -203,7 +249,7 @@ export default function SaleScreen() {
         <YStack width={'100%'} flex={1}>
           <SearchField
             name="search"
-            placeholder="Buscar produto por nome ou código"
+            placeholder="Nome ou código do produto"
             value={search}
             onSearch={text => {
               setSearch(text);
@@ -286,9 +332,16 @@ export default function SaleScreen() {
       />
       <Spacer size={10} />
       <Card padding="$2" bordered radiused gap={10}>
-        <XStack justifyContent="space-between">
-          <Text color="$color10">Total de itens:</Text>
-          <Text color="$color10">{quantity}</Text>
+        <XStack justifyContent="space-between" alignItems="center">
+          <XStack gap={10}>
+            <Text color="$color10">Total de itens:</Text>
+            <Text color="$color10">{quantity}</Text>
+          </XStack>
+          <Button onPress={() => setShowShare(true)} disabled={quantity === 0}>
+            <Button.Icon>
+              <Share2 />
+            </Button.Icon>
+          </Button>
         </XStack>
 
         <Text fontSize="$5" textAlign="right">
@@ -321,13 +374,96 @@ export default function SaleScreen() {
           >
             <Feather name="x" size={24} color={theme.color10?.val} />
           </Button>
-          <CameraViewComponent
-            style={{ width: '100%', height: 100 }}
-            barcodeScannerSettings={{
-              barcodeTypes: ['ean13'],
-            }}
-            onBarcodeScanned={handleScanResult}
+          {hasPermission ? (
+            <CameraViewComponent
+              style={{ width: '100%', height: 100 }}
+              barcodeScannerSettings={{
+                barcodeTypes: ['ean13'],
+              }}
+              onBarcodeScanned={handleScanResult}
+            />
+          ) : (
+            <Text>Permissão não concedida!</Text>
+          )}
+        </YStack>
+      </Modal>
+
+      <Modal visible={showShare} animationType="fade">
+        <YStack
+          flex={1}
+          justifyContent="flex-start"
+          padding={'$2'}
+          paddingTop="$11"
+          gap={10}
+          backgroundColor={'$background'}
+        >
+          <Button
+            onPress={() => setShowShare(false)}
+            marginBottom="$2"
+            circular
+            alignSelf="flex-end"
+            marginRight={'$4'}
+          >
+            <Feather name="x" size={24} color={theme.color10?.val} />
+          </Button>
+          <Text marginBottom={'$2'}>{getValues('customerName') || '--'}</Text>
+          <FlatList
+            data={selectedProducts}
+            keyExtractor={item => item.product_code!}
+            ItemSeparatorComponent={() => <Spacer size={5} />}
+            ListHeaderComponent={
+              <Text marginVertical={'$2'} fontWeight={'bold'} fontSize={'$4'}>
+                PRODUTOS
+              </Text>
+            }
+            ListFooterComponent={
+              <YStack>
+                <Separator marginVertical={'$2'} />
+                <Text textAlign="right" fontSize={'$5'}>
+                  TOTAL: {formatCurrency(totalAmount)}
+                </Text>
+              </YStack>
+            }
+            renderItem={({ item }) => (
+              <XStack
+                borderBottomWidth={1}
+                borderColor={'$color'}
+                padding={'$2'}
+                flex={1}
+                gap={'$2'}
+              >
+                <Text fontSize={'$3'} width={'$2'}>
+                  {item.quantity}
+                </Text>
+                <Text flex={1} fontSize={'$3'}>
+                  {item.product_name}
+                </Text>
+                <Text fontSize={'$3'} width={'$7'} textAlign="right">
+                  {formatCurrency((item.sale_price || 0) * item.quantity)}
+                </Text>
+              </XStack>
+            )}
+            ListEmptyComponent={
+              <EmptyList
+                icon="shopping-cart"
+                title="Nenhum produto adicionado"
+                message="Adicione produtos ao carrinho"
+              />
+            }
+            getItemLayout={(data, index) => ({
+              length: 80,
+              offset: 80 * index,
+              index,
+            })}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
           />
+          <Button onPress={printToFile} marginBottom={'$4'} variant="outlined">
+            <Button.Icon>
+              <Printer />
+            </Button.Icon>
+          </Button>
         </YStack>
       </Modal>
     </YStack>

@@ -61,7 +61,6 @@ const fetchProductById = async (productId: string): Promise<Product> => {
   return data;
 };
 
-// Função para buscar o preço médio
 const fetchAveragePrice = async (productId: string) => {
   const { data, error } = await supabase.rpc('calculate_average_price', {
     product_code_input: productId,
@@ -70,7 +69,6 @@ const fetchAveragePrice = async (productId: string) => {
   return data || 0;
 };
 
-// Função para buscar o preço sugerido
 const fetchSuggestedPrice = async (productId: string) => {
   const { data, error } = await supabase
     .from('suggested_prices')
