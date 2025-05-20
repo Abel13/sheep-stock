@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "expo start --dev-client",
+    "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "npx expo run:android",
     "ios": "npx expo run:ios",

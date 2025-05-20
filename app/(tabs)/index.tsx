@@ -320,7 +320,7 @@ export default function SaleScreen() {
                 <td>${item.product_name}</td>
                 <td>${item.quantity}</td>
                 <td>R$ ${item.sale_price?.toFixed(2) || 0}</td>
-                <td>R$ ${(item.sale_price || 0 * item.quantity).toFixed(2)}</td>
+                <td>R$ ${((item.sale_price || 0) * item.quantity).toFixed(2)}</td>
               </tr>
             `,
               )
