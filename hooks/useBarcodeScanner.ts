@@ -1,10 +1,6 @@
 // hooks/useBarcodeScanner.ts
-import { useState, useEffect, useCallback } from 'react';
-import {
-  CameraView,
-  useCameraPermissions,
-  BarcodeScanningResult,
-} from 'expo-camera';
+import { useEffect } from 'react';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 export function useBarcodeScanner() {
   const [permission, requestPermission] = useCameraPermissions();

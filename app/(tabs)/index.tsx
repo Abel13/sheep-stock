@@ -110,23 +110,6 @@ export default function SaleScreen() {
     },
   });
 
-  const html = `
-  <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
-    </head>
-    <body style="text-align: center;">
-      <img
-        src="https://d30j33t1r58ioz.cloudfront.net/static/guides/sdk.png"
-        style="width: 90vw;"
-      />
-      <h1 style="font-size: 50px; font-family: Helvetica Neue; font-weight: normal;">
-        ${getValues('customerName')}
-      </h1>
-    </body>
-  </html>
-  `;
-
   const quantity = useMemo(
     () =>
       selectedProducts.reduce(
@@ -221,6 +204,97 @@ export default function SaleScreen() {
   };
 
   const handleShare = useCallback(() => {}, []);
+
+  const html = `
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            color: #333;
+          }
+          header {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          img {
+            max-width: 120px;
+            margin-bottom: 10px;
+          }
+          h1 {
+            font-size: 24px;
+            margin: 10px 0;
+          }
+          .info {
+            margin-bottom: 20px;
+            font-size: 16px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          table, th, td {
+            border: 1px solid #ddd;
+          }
+          th, td {
+            padding: 10px;
+            text-align: left;
+          }
+          th {
+            background-color: #f2f2f2;
+          }
+          .total {
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+          }
+        </style>
+      </head>
+      <body>
+        <header>
+          <img src="cid:logo" alt="Logo" />
+          <h1>Recibo de Venda</h1>
+        </header>
+
+        <div class="info">
+          <p><strong>Cliente:</strong> ${getValues('customerName') || 'Não informado'}</p>
+          <p><strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
+          <p><strong>Valor pago:</strong> ${formatCurrency(getValues('valuePaid') || 0)}</p>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Preço Unitário</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${selectedProducts
+              .map(
+                item => `
+              <tr>
+                <td>${item.product_name}</td>
+                <td>${item.quantity}</td>
+                <td>R$ ${item.sale_price?.toFixed(2) || 0}</td>
+                <td>R$ ${(item.sale_price || 0 * item.quantity).toFixed(2)}</td>
+              </tr>
+            `,
+              )
+              .join('')}
+          </tbody>
+        </table>
+
+        <p class="total">TOTAL: R$ ${totalAmount.toFixed(2)}</p>
+      </body>
+    </html>
+    `;
 
   const handleScanResult = (result: BarcodeScanningResult) => {
     setShowScanner(false);
@@ -394,7 +468,6 @@ export default function SaleScreen() {
           justifyContent="flex-start"
           padding={'$2'}
           paddingTop="$11"
-          gap={10}
           backgroundColor={'$background'}
         >
           <Button
@@ -406,7 +479,17 @@ export default function SaleScreen() {
           >
             <Feather name="x" size={24} color={theme.color10?.val} />
           </Button>
-          <Text marginBottom={'$2'}>{getValues('customerName') || '--'}</Text>
+          <Text marginBottom={'$2'} fontWeight={'bold'} fontSize={'$5'}>
+            {getValues('customerName') || '--'}
+          </Text>
+          <XStack>
+            <Text marginBottom={'$2'} fontWeight={'bold'}>
+              {'VALOR PAGO: '}
+            </Text>
+            <Text marginBottom={'$2'}>
+              {formatCurrency(getValues('valuePaid')) || formatCurrency(0)}
+            </Text>
+          </XStack>
           <FlatList
             data={selectedProducts}
             keyExtractor={item => item.product_code!}

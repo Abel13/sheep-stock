@@ -4,19 +4,7 @@ import { supabase } from '@/services/supabaseClient';
 import { FlatList, RefreshControl } from 'react-native';
 import { Product } from '@/types/Product';
 import { useRouter } from 'expo-router';
-import {
-  YStack,
-  XStack,
-  Text,
-  Button,
-  Card,
-  Spacer,
-  Input,
-  Image,
-  Separator,
-  Spinner,
-  VisuallyHidden,
-} from 'tamagui';
+import { YStack, XStack, Text, Card, Spacer, Image, Separator } from 'tamagui';
 import { SearchField } from '@/components/molecules/SearchField';
 import { useForm } from 'react-hook-form';
 import { formatCurrency } from '@/utils/currency';
@@ -33,6 +21,7 @@ const fetchProducts = async (search: string) => {
       `product_name.ilike.%${search}%,product_code.ilike.%${search}%`,
     );
   }
+
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data;
