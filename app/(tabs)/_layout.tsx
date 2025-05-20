@@ -61,9 +61,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="orders"
+        name="reports"
         options={{
-          title: 'Em Falta',
+          headerShown: false,
+          title: 'Relatórios',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="receipt-outline" color={color} size={size} />
           ),

@@ -62,6 +62,7 @@ export default function LowStockScreen() {
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}
+        ListHeaderComponent={() => <Spacer size={'$3'} />}
         ListFooterComponent={() => <Spacer size="$3" />}
         renderItem={({ item }) => (
           <ListItem

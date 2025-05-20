@@ -50,6 +50,7 @@
     "axios": "^1.7.9",
     "babel-plugin-module-resolver": "^5.0.2",
     "burnt": "^0.12.2",
+    "date-fns": "^4.1.0",
     "expo": "^53.0.9",
     "expo-camera": "~16.1.6",
     "expo-constants": "~17.1.6",
