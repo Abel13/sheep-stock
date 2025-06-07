@@ -16,6 +16,7 @@ export const ProductListItem = memo(
       paddingVertical="$2"
       justifyContent="space-between"
       gap="$2"
+      radiused
       hoverTheme
       pressTheme
     >

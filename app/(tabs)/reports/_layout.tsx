@@ -33,6 +33,12 @@ export default function TabLayout() {
           title: 'Vendas Mensais',
         }}
       />
+      <Stack.Screen
+        name="best_sellers"
+        options={{
+          title: 'Mais Vendidos',
+        }}
+      />
     </Stack>
   );
 }

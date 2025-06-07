@@ -23,6 +23,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { SaleFormValues, saleSchema } from '@/schemas/saleSchema';
 import { FormField } from '@/components/molecules/FormField/FormField';
+import { Loading } from '@/components/molecules/Loading';
 
 const fetchSaleDetails = async ({ queryKey }) => {
   const [, saleId] = queryKey;
@@ -142,8 +143,7 @@ export default function SaleDetails() {
         alignItems="center"
         gap={10}
       >
-        <Spinner size="large" color="$lavender" />
-        <Text>Carregando venda...</Text>
+        <Loading message="Carregando venda..." />
       </YStack>
     );
 

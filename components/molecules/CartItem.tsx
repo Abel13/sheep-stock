@@ -1,10 +1,9 @@
 import { memo } from 'react';
 import { ListItem, Text, XStack, YStack, Button } from 'tamagui';
-import { InsertSaleProduct } from '@/types/SaleProduct';
 import { formatCurrency } from '@/utils/currency';
 
 interface CartItemProps {
-  item: InsertSaleProduct;
+  item: any;
   onIncrement: (code: string) => void;
   onDecrement: (code: string) => void;
 }

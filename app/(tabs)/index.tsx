@@ -17,7 +17,7 @@ import {
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
 import { Barcode, Printer, Share, Share2 } from '@tamagui/lucide-icons';
-import { FlatList, Modal } from 'react-native';
+import { FlatList, Modal, RefreshControl } from 'react-native';
 import { get, useForm, type SubmitHandler } from 'react-hook-form';
 import { saleSchema, SaleFormValues } from '@/schemas/saleSchema';
 import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';

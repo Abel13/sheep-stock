@@ -13,6 +13,7 @@ import {
 } from 'tamagui';
 import { useRouter } from 'expo-router';
 import { FlatList } from 'react-native';
+import { Loading } from '@/components/molecules/Loading';
 
 const fetchLowStockProducts = async () => {
   const { data, error } = await supabase
@@ -43,8 +44,7 @@ export default function LowStockScreen() {
         alignItems="center"
         gap={10}
       >
-        <Spinner size="large" color="$lavender" />
-        <Text>Carregando produtos...</Text>
+        <Loading message="Carregando produtos..." />
       </YStack>
     );
   if (error)
@@ -72,6 +72,7 @@ export default function LowStockScreen() {
             bordered
             hoverTheme
             pressTheme
+            radiused
             onPress={() => {
               router.navigate({
                 pathname: '/(tabs)/products/[id]',

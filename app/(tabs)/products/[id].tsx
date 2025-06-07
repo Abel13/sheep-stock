@@ -27,9 +27,9 @@ import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyForm
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { FormField } from '@/components/molecules/FormField/FormField';
-import { Resolver } from 'react-hook-form';
 import { formatCurrency } from '@/utils/currency';
+import { DeleteObjectRequest } from 'aws-sdk/clients/s3';
+import { Loading } from '@/components/molecules/Loading';
 
 interface UpdateProduct {
   sale_price: number;
@@ -246,6 +246,31 @@ export default function ProductEdit() {
     }
   };
 
+  const deleteImage = async () => {
+    const params: DeleteObjectRequest = {
+      Bucket: process.env.EXPO_PUBLIC_AWS_BUCKET_NAME as string,
+      Key: `products/${id}.jpg`,
+    };
+
+    try {
+      await s3.deleteObject(params).promise();
+
+      mutationImage.mutate({
+        productId: id as string,
+        imageUrl: '',
+      });
+      setImageUrl(null);
+    } catch (error) {
+      console.error('Erro ao fazer upload para S3:', error);
+      toast.show('Erro', {
+        message: 'Erro ao excluir a imagem!',
+        customData: {
+          myPreset: 'error',
+        },
+      });
+    }
+  };
+
   const openShareDialogAsync = async () => {
     if (product?.image_url) {
       const fileDetails = {
@@ -293,8 +318,7 @@ export default function ProductEdit() {
         alignItems="center"
         gap={10}
       >
-        <Spinner size="large" color="$lavender" />
-        <Text>Carregando produto...</Text>
+        <Loading message="Carregando produto..." />
       </YStack>
     );
 
@@ -334,13 +358,13 @@ export default function ProductEdit() {
               borderColor={'$borderColor'}
             />
             <Button
-              onPress={pickImage}
+              onPress={deleteImage}
               height={30}
               justifyContent="center"
               alignItems="center"
             >
               <Feather
-                name="edit"
+                name="trash-2"
                 color={theme.color10?.val}
                 size={16}
                 style={{ alignSelf: 'center' }}
@@ -363,7 +387,7 @@ export default function ProductEdit() {
                 Preço de venda sugerido (
                 {suggestedPrice === null
                   ? '120%'
-                  : `${(((suggestedPrice - avgPrice) / avgPrice) * 100 || 0).toFixed(0)}% `}
+                  : `${(((suggestedPrice! - avgPrice!) / avgPrice!) * 100 || 0).toFixed(0)}% `}
                 de lucro):{' '}
                 {formatCurrency(
                   suggestedPrice !== null

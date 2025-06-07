@@ -12,6 +12,7 @@ import {
 import { FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { formatCurrency } from '@/utils/currency';
+import { Loading } from '@/components/molecules/Loading';
 
 const fetchOrders = async () => {
   const { data, error } = await supabase
@@ -44,8 +45,7 @@ export default function OrderList() {
         alignItems="center"
         gap={10}
       >
-        <Spinner size="large" color="$lavender" />
-        <Text>Carregando pedidos...</Text>
+        <Loading message="Carregando pedidos..." />
       </YStack>
     );
   if (error)

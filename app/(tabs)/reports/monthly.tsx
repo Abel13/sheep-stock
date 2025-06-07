@@ -3,9 +3,7 @@ import { supabase } from '@/services/supabaseClient';
 import {
   YStack,
   XStack,
-  ListItem,
   Label,
-  Button,
   Spacer,
   Card,
   Text,
@@ -15,13 +13,13 @@ import {
   Adapt,
   Sheet,
 } from 'tamagui';
-import { useRouter } from 'expo-router';
-import { FlatList, RefreshControl, SectionList } from 'react-native';
+import { RefreshControl, SectionList } from 'react-native';
 import { firstMonthDay, lastMonthDay } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
 import { Sale } from '@/types/Sale';
 import { useMemo, useState } from 'react';
 import { ChevronDown } from '@tamagui/lucide-icons';
+import { Loading } from '@/components/molecules/Loading';
 
 const months = [
   { value: '1', label: 'Janeiro' },
@@ -100,8 +98,7 @@ export default function LowStockScreen() {
         alignItems="center"
         gap={10}
       >
-        <Spinner size="large" color="$lavender" />
-        <Text>Carregando produtos...</Text>
+        <Loading message="Carregando vendas..." />
       </YStack>
     );
   if (error)

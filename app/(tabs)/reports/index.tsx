@@ -12,6 +12,11 @@ const reports = [
     description: 'Filtro de vendas por mês e ano.',
     route: '/reports/monthly',
   },
+  {
+    name: 'Mais vendidos',
+    description: 'Produtos mais vendidos da loja.',
+    route: '/reports/best_sellers',
+  },
 ];
 
 export default function Reports() {
@@ -30,6 +35,7 @@ export default function Reports() {
               onPress={() => router.push(item.route as any)}
               title={item.name}
               subTitle={item.description}
+              radiused
               marginBottom={'$2'}
             />
           );

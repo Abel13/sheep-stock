@@ -130,7 +130,9 @@ export default function Products() {
       <FlatList
         data={products}
         keyExtractor={(item: Product) => item.product_code}
-        refreshControl={<RefreshControl refreshing={isLoading} />}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} title="Carregando..." />
+        }
         onRefresh={() => {
           queryClient.invalidateQueries({
             queryKey: ['products_list', search],
