@@ -9,6 +9,15 @@ export interface ProductXML {
 export interface PurchaseXML {
   supplier: string;
   cnpj: string;
+  discount: number;
+  icms: number;
   purchase_date: string;
+  icms_st: number;
+  ipi: number;
+  shipping_cost: number;
+  total_items: number;
+  total_products_value: number;
+  total_value: number;
+  total_weight: number;
   order_products: ProductXML[];
 }

@@ -104,7 +104,21 @@ export default function PurchaseUploadScreen() {
   };
 
   const handleSaveOrder = async () => {
-    const { supplier, cnpj, purchase_date, order_products } = purchaseData!;
+    const {
+      supplier,
+      cnpj,
+      purchase_date,
+      order_products,
+      discount,
+      icms,
+      icms_st,
+      ipi,
+      shipping_cost,
+      total_items,
+      total_products_value,
+      total_value,
+      total_weight,
+    } = purchaseData!;
 
     const cleanCnpj = removeCnpjFormatting(cnpj);
     const formattedDate = convertDateToISO(purchase_date);
@@ -112,7 +126,22 @@ export default function PurchaseUploadScreen() {
     try {
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert([{ supplier, cnpj: cleanCnpj, purchase_date: formattedDate }])
+        .insert([
+          {
+            supplier,
+            cnpj: cleanCnpj,
+            purchase_date: formattedDate,
+            discount,
+            icms,
+            icms_st,
+            ipi,
+            shipping_cost,
+            total_items,
+            total_products_value,
+            total_value,
+            total_weight,
+          },
+        ])
         .select()
         .single();
 
@@ -196,6 +225,37 @@ export default function PurchaseUploadScreen() {
       </Text>
       <Text>Data da Compra: {purchaseData.purchase_date}</Text>
 
+      <YStack marginTop={'$3'} borderBottomWidth={'$1'} gap={'$1'}>
+        <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
+          <Text fontWeight={500}>ICMS ST:</Text>
+          <Text>{formatCurrency(purchaseData.icms_st)}</Text>
+        </XStack>
+        <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
+          <Text fontWeight={500}>IPI:</Text>
+          <Text>{formatCurrency(purchaseData.ipi)}</Text>
+        </XStack>
+
+        <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
+          <Text fontWeight={500}>Frete:</Text>
+          <Text>{formatCurrency(purchaseData.shipping_cost)}</Text>
+        </XStack>
+        <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
+          <Text fontWeight={500}>Total em Produtos:</Text>
+          <Text>{formatCurrency(purchaseData.total_products_value)}</Text>
+        </XStack>
+        <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
+          <Text fontWeight={500} color={'$olive'}>
+            Desconto:
+          </Text>
+          <Text color={'$olive'}>
+            - {formatCurrency(purchaseData.discount)}
+          </Text>
+        </XStack>
+      </YStack>
+      <Text alignSelf="flex-end" fontWeight={600} margin={'$1'}>
+        Total: {formatCurrency(purchaseData.total_value)}
+      </Text>
+
       <Spacer size="$4" />
 
       <FlatList
@@ -204,6 +264,11 @@ export default function PurchaseUploadScreen() {
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}
+        ListHeaderComponent={
+          <Text fontSize={'$5'} fontFamily={'$heading'}>
+            Produtos
+          </Text>
+        }
         getItemLayout={(data, index) => ({
           length: 80,
           offset: 80 * index,

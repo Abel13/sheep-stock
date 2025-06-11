@@ -232,6 +232,10 @@ export default function SaleScreen() {
             margin-bottom: 20px;
             font-size: 16px;
           }
+          .disclaimer {
+            color: #515151;
+            font-size: 12px;
+          }
           table {
             width: 100%;
             border-collapse: collapse;
@@ -294,7 +298,8 @@ export default function SaleScreen() {
             </g>
           </svg>
 
-          <h1>Recibo de Venda</h1>
+          <h1>Recibo de Compra</h1>
+          <span class="disclaimer">NÃO É CUPOM FISCAL</span>
         </header>
 
         <div class="info">
