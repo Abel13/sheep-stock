@@ -1,13 +1,15 @@
 import { useState, memo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { FlatList, RefreshControl } from 'react-native';
+import { FlatList } from 'react-native';
 import { Product } from '@/types/Product';
 import { useRouter } from 'expo-router';
 import { YStack, XStack, Text, Card, Spacer, Image, Separator } from 'tamagui';
 import { SearchField } from '@/components/molecules/SearchField';
 import { useForm } from 'react-hook-form';
 import { formatCurrency } from '@/utils/currency';
+import { Loading } from '@/components/molecules/Loading';
+import { Ionicons } from '@expo/vector-icons';
 
 const fetchProducts = async (search: string) => {
   let query = supabase
@@ -23,6 +25,7 @@ const fetchProducts = async (search: string) => {
   }
 
   const { data, error } = await query;
+
   if (error) throw new Error(error.message);
   return data;
 };
@@ -104,12 +107,14 @@ export default function Products() {
     });
   };
 
-  if (error)
+  if (error) {
+    console.warn(error);
     return (
       <YStack padding="$4">
         <Text color="$red10">Error: {error.message}</Text>
       </YStack>
     );
+  }
 
   return (
     <YStack
@@ -127,31 +132,29 @@ export default function Products() {
         }}
       />
       <Separator margin={10} />
-      <FlatList
-        data={products}
-        keyExtractor={(item: Product) => item.product_code}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} title="Carregando..." />
-        }
-        onRefresh={() => {
-          queryClient.invalidateQueries({
-            queryKey: ['products_list', search],
-          });
-        }}
-        refreshing={isLoading}
-        initialNumToRender={16}
-        maxToRenderPerBatch={16}
-        windowSize={5}
-        getItemLayout={(data, index) => ({
-          length: 100,
-          offset: 100 * index,
-          index,
-        })}
-        ItemSeparatorComponent={() => <Spacer size="$2" />}
-        renderItem={({ item }) => (
-          <ProductItem item={item} onPress={handlePress} />
-        )}
-      />
+      {isLoading ? (
+        <YStack flex={1} backgroundColor="$background">
+          <Loading message="Carregando..." />
+        </YStack>
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(item: Product) => item.product_code}
+          initialNumToRender={16}
+          maxToRenderPerBatch={16}
+          windowSize={5}
+          getItemLayout={(data, index) => ({
+            length: 100,
+            offset: 100 * index,
+            index,
+          })}
+          ItemSeparatorComponent={() => <Spacer size="$2" />}
+          renderItem={({ item }) => (
+            <ProductItem item={item} onPress={handlePress} />
+          )}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </YStack>
   );
 }

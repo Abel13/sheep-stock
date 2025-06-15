@@ -22,7 +22,7 @@ export const FormField = ({
   });
 
   return (
-    <YStack marginBottom="$4">
+    <YStack>
       {label && (
         <Text htmlFor={name} fontSize={12} marginBottom={5} color="$gray11">
           {label}
@@ -33,7 +33,7 @@ export const FormField = ({
         value={value}
         onChangeText={onChange}
         selectionColor={'$purple'}
-        borderColor={error ? '$red8Dark' : '$purple4'}
+        borderColor={error ? '$red10Dark' : '$purple4'}
         {...props}
       />
 

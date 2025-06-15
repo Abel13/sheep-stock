@@ -1,9 +1,9 @@
 import React from 'react';
-
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Stack } from 'expo-router';
 import { useTheme } from 'tamagui';
 
-export default function TabLayout() {
+export default function ProductStackLayout() {
   const theme = useTheme();
 
   return (
@@ -18,13 +18,15 @@ export default function TabLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Pedidos',
+          title: 'Estoque',
+          headerShown: false,
         }}
       />
       <Stack.Screen
-        name="add"
+        name="[id]"
         options={{
-          title: 'Novo Pedido',
+          title: 'Produto',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
     </Stack>

@@ -18,25 +18,15 @@ export default function TabLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Relatórios',
+          title: 'Vendas',
+          headerShown: false,
         }}
       />
       <Stack.Screen
-        name="orders"
+        name="[id]"
         options={{
-          title: 'Estoque Baixo',
-        }}
-      />
-      <Stack.Screen
-        name="monthly"
-        options={{
-          title: 'Vendas Mensais',
-        }}
-      />
-      <Stack.Screen
-        name="best_sellers"
-        options={{
-          title: 'Mais Vendidos',
+          title: 'Venda',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
     </Stack>

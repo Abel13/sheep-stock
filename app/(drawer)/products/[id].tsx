@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Modal } from 'react-native';
+import { Modal, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AWS from 'aws-sdk';
@@ -14,13 +14,11 @@ import {
   XStack,
   Text,
   Button,
-  Input,
   Card,
   Switch,
   Image,
   useTheme,
   View,
-  Spinner,
 } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
 import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
@@ -164,11 +162,11 @@ export default function ProductEdit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['product', id] });
       queryClient.invalidateQueries({ queryKey: ['products_list', ''] });
-      queryClient.invalidateQueries({ queryKey: ['lowStockProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
       toast.show('Tudo certo!', {
         message: 'Dados salvos com sucesso!',
       });
-      router.dismissTo('/(tabs)/products');
+      router.dismissTo('/(drawer)/products');
     },
     onError: () => {},
   });
@@ -336,45 +334,54 @@ export default function ProductEdit() {
         {product.product_name}
       </Text>
 
-      <Card
-        onPress={() => (imageUrl ? setModalVisible(true) : pickImage())}
-        width={100}
-        height={100}
-        bordered
-        pressTheme
-        justifyContent="center"
-        alignItems="center"
-        marginBlock="$2"
-        marginBottom="$6"
-      >
-        {imageUrl ? (
-          <View flex={1}>
-            <Image
-              source={{ uri: imageUrl }}
+      <XStack paddingBlock={'$2'}>
+        <Pressable
+          onPress={() => (imageUrl ? setModalVisible(true) : pickImage())}
+        >
+          {imageUrl ? (
+            <View>
+              <Image
+                source={{ uri: imageUrl }}
+                width={100}
+                height={100}
+                borderTopStartRadius="$4"
+                borderTopEndRadius="$4"
+                borderWidth={1}
+                borderColor={'$borderColor'}
+              />
+              <Button
+                onPress={deleteImage}
+                height={30}
+                justifyContent="center"
+                alignItems="center"
+                borderRadius={0}
+                borderBottomLeftRadius={'$4'}
+                borderBottomRightRadius={'$4'}
+              >
+                <Feather
+                  name="trash-2"
+                  color={theme.color10?.val}
+                  size={16}
+                  style={{ alignSelf: 'center' }}
+                />
+              </Button>
+            </View>
+          ) : (
+            <View
               width={100}
               height={100}
-              borderRadius="$4"
-              borderWidth={1}
-              borderColor={'$borderColor'}
-            />
-            <Button
-              onPress={deleteImage}
-              height={30}
               justifyContent="center"
               alignItems="center"
+              borderRadius="$4"
+              borderWidth={1}
+              backgroundColor={'$color3'}
+              borderColor={'$borderColor'}
             >
-              <Feather
-                name="trash-2"
-                color={theme.color10?.val}
-                size={16}
-                style={{ alignSelf: 'center' }}
-              />
-            </Button>
-          </View>
-        ) : (
-          <Feather name="image" size={24} color={theme.color9?.val} />
-        )}
-      </Card>
+              <Feather name="image" size={24} color={theme.color9?.val} />
+            </View>
+          )}
+        </Pressable>
+      </XStack>
 
       <YStack gap="$4">
         <YStack gap="$2">

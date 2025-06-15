@@ -1,30 +1,42 @@
 import { memo } from 'react';
 import { ListItem, Text, XStack, YStack, Button } from 'tamagui';
 import { formatCurrency } from '@/utils/currency';
+import { ItemSale } from '@/types/ItemSale';
+import { Feather } from '@expo/vector-icons';
+import { Trash2 } from '@tamagui/lucide-icons';
 
 interface CartItemProps {
-  item: any;
+  item: ItemSale;
   onIncrement: (code: string) => void;
   onDecrement: (code: string) => void;
 }
 
 export const CartItem = memo(
   ({ item, onIncrement, onDecrement }: CartItemProps) => (
-    <ListItem
-      key={item.product_code}
-      borderWidth={1}
-      radiused
-      padding="$3"
-      gap="$1"
-    >
-      <YStack flex={1} gap="$2">
-        <Text>{item.product_name}</Text>
-        <Text>Total: {formatCurrency(item.unit_price * item.quantity)}</Text>
+    <ListItem key={item.code} borderWidth={1} radiused padding="$3" gap="$1">
+      <YStack flex={1} gap="$2" marginRight={'$2'}>
+        <Text>{item.name}</Text>
+        <Text>Total: {formatCurrency(item.price * item.quantity)}</Text>
       </YStack>
       <XStack gap="$2" alignItems="center">
-        <Button onPress={() => onDecrement(item.product_code!)}>-</Button>
+        <Button onPress={() => onDecrement(item.code!)}>
+          {item.quantity === 1 && (
+            <Button.Icon>
+              <Trash2 />
+            </Button.Icon>
+          )}
+          {item.quantity > 1 && (
+            <Button.Text fontSize={'$5'} paddingHorizontal={'$1.5'}>
+              -
+            </Button.Text>
+          )}
+        </Button>
         <Text>{item.quantity.toString().padStart(2, '0')}</Text>
-        <Button onPress={() => onIncrement(item.product_code!)}>+</Button>
+        <Button onPress={() => onIncrement(item.code!)}>
+          <Button.Text fontSize={'$5'} paddingHorizontal={'$1.5'}>
+            +
+          </Button.Text>
+        </Button>
       </XStack>
     </ListItem>
   ),

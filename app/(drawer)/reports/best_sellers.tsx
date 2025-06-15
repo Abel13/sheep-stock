@@ -40,7 +40,7 @@ export default function BestSellers() {
         if (error) throw new Error(error.message);
         return data;
       } catch (error) {
-        console.log(error);
+        console.warn(error);
         throw error;
       }
     },

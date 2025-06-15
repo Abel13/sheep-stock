@@ -2,9 +2,18 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
 import { useRouter } from 'expo-router';
 import { RefreshControl, SectionList } from 'react-native';
-import { YStack, XStack, Text, Card, Separator, Spacer } from 'tamagui';
+import {
+  YStack,
+  XStack,
+  Text,
+  Card,
+  Separator,
+  Spacer,
+  VisuallyHidden,
+} from 'tamagui';
 import { Sale } from '@/types/Sale';
 import { formatCurrency } from '@/utils/currency';
+import { Loading } from '@/components/molecules/Loading';
 
 const fetchSales = async () => {
   let query = supabase
@@ -66,11 +75,7 @@ export default function Sales() {
       <SectionList
         sections={groupedSales}
         keyExtractor={item => item.id.toString()}
-        refreshControl={<RefreshControl refreshing={isLoading} />}
-        onRefresh={() => {
-          queryClient.invalidateQueries({ queryKey: ['sales'] });
-        }}
-        refreshing={isLoading}
+        showsVerticalScrollIndicator={false}
         renderSectionHeader={({ section: { title } }) => (
           <YStack paddingVertical="$3" backgroundColor={'$background'}>
             <Text fontSize="$4" fontWeight="bold" color="$color10">
@@ -95,7 +100,7 @@ export default function Sales() {
           <Card
             onPress={() =>
               router.push({
-                pathname: '/(tabs)/sales/[id]',
+                pathname: '/(drawer)/sales/[id]',
                 params: { id: item.id },
               })
             }

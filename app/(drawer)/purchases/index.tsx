@@ -59,7 +59,7 @@ export default function OrderList() {
     <YStack padding="$4" flex={1} backgroundColor="$background">
       <Button
         marginBottom={'$4'}
-        onPress={() => router.push({ pathname: '/(tabs)/purchases/add' })}
+        onPress={() => router.push({ pathname: '/(drawer)/purchases/add' })}
       >
         Novo Pedido
       </Button>
@@ -88,6 +88,7 @@ export default function OrderList() {
           </ListItem>
         )}
         ItemSeparatorComponent={() => <Spacer size="$3" />}
+        showsVerticalScrollIndicator={false}
       />
     </YStack>
   );

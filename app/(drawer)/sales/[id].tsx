@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
 import { useLocalSearchParams } from 'expo-router';
@@ -14,7 +14,7 @@ import {
   Separator,
   Spinner,
 } from 'tamagui';
-import { FlatList } from 'react-native';
+import { FlatList, SectionList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useToastController } from '@tamagui/toast';
 import { formatCurrency } from '@/utils/currency';
@@ -25,7 +25,7 @@ import { SaleFormValues, saleSchema } from '@/schemas/saleSchema';
 import { FormField } from '@/components/molecules/FormField/FormField';
 import { Loading } from '@/components/molecules/Loading';
 
-const fetchSaleDetails = async ({ queryKey }) => {
+const fetchSaleDetails = async ({ queryKey }: { queryKey: string[] }) => {
   const [, saleId] = queryKey;
 
   const { data: saleData, error: saleError } = await supabase
@@ -36,7 +36,7 @@ const fetchSaleDetails = async ({ queryKey }) => {
 
   if (saleError) throw new Error(saleError.message);
 
-  const { data: saleItems, error: itemsError } = await supabase
+  const { data: saleProducts, error: productError } = await supabase
     .from('sale_products')
     .select(
       `
@@ -49,9 +49,20 @@ const fetchSaleDetails = async ({ queryKey }) => {
     )
     .eq('sale_id', saleId);
 
-  if (itemsError) throw new Error(itemsError.message);
+  const { data: saleServices, error: serviceError } = await supabase
+    .from('sale_services')
+    .select(
+      `
+      service_code,
+      price,
+      services (name)
+    `,
+    )
+    .eq('sale_id', saleId);
 
-  return { sale: saleData, items: saleItems };
+  if (productError || serviceError) throw new Error('Falha ao buscar os itens');
+
+  return { sale: saleData, products: saleProducts, services: saleServices };
 };
 
 const updateCustomer = async ({
@@ -126,6 +137,66 @@ export default function SaleDetails() {
     });
   };
 
+  const groupedSales = useMemo(() => {
+    if (!data) return [];
+
+    const services = {
+      title: 'Serviços',
+      totalPrice: data.services.reduce(
+        (sum, service) => sum + (service.price || 0),
+        0,
+      ),
+      data: data.services.map(item => {
+        return {
+          code: item.service_code || '',
+          name: item.services?.name || '',
+          price: item.price || 0,
+          unit_price: item.price || 0,
+          quantity: 1,
+        };
+      }),
+    };
+
+    const products = {
+      title: 'Produtos',
+      totalPrice: data.products.reduce(
+        (sum, product) => sum + (product.unit_price || 0),
+        0,
+      ),
+      data: data.products.map(item => {
+        return {
+          code: item.product_code || '',
+          name: item.products?.product_name || '',
+          price: item.total_price || 0,
+          unit_price: item.unit_price,
+          quantity: item.quantity,
+        };
+      }),
+    };
+
+    let group: {
+      title: string;
+      totalPrice: number;
+      data: {
+        code: string;
+        name: string;
+        price: number;
+        quantity?: number;
+        unit_price?: number;
+      }[];
+    }[] = [];
+
+    if (data.products.length > 0) {
+      group.push(products);
+    }
+
+    if (data.services.length > 0) {
+      group.push(services);
+    }
+
+    return group;
+  }, [data]);
+
   useEffect(() => {
     if (data) {
       setValue('customerName', data.sale.customer_name || '');
@@ -189,13 +260,33 @@ export default function SaleDetails() {
         </YStack>
       </YStack>
 
-      <Text fontSize="$4" marginBottom="$3">
-        Itens
-      </Text>
-      <FlatList
-        data={data.items}
-        keyExtractor={item => item.product_code!}
+      <SectionList
+        sections={groupedSales}
+        keyExtractor={item => item.code}
         ItemSeparatorComponent={() => <Spacer size="$1" />}
+        showsVerticalScrollIndicator={false}
+        renderSectionHeader={({ section: { title } }) => (
+          <YStack paddingVertical="$3" backgroundColor={'$background'}>
+            <Text fontSize="$4" fontWeight="bold" color="$color10">
+              {title}
+            </Text>
+          </YStack>
+        )}
+        renderSectionFooter={({ section: { totalPrice } }) => (
+          <YStack paddingVertical="$3">
+            <Text
+              fontSize="$4"
+              color="$gray20Dark"
+              textAlign="right"
+              fontWeight={600}
+              paddingInline="$2"
+            >
+              Total: {formatCurrency(totalPrice)}
+            </Text>
+
+            <Separator borderColor="$borderColor" marginTop="$2" />
+          </YStack>
+        )}
         renderItem={({ item }) => (
           <Card
             paddingHorizontal="$3"
@@ -206,9 +297,9 @@ export default function SaleDetails() {
             pressTheme
           >
             <Text color="$gray10Dark" fontSize={8}>
-              {item.product_code}
+              {item.code}
             </Text>
-            <Text fontSize={12}>{item.products!.product_name}</Text>
+            <Text fontSize={12}>{item.name}</Text>
             <XStack justifyContent="space-between" marginTop="$3">
               <YStack alignItems="center">
                 <Text fontWeight={'600'}>QTD:</Text>
@@ -217,7 +308,7 @@ export default function SaleDetails() {
               <YStack alignItems="center">
                 <Text fontWeight={'600'}>PREÇO UNIT.:</Text>
                 <Text fontWeight={'600'}>
-                  {formatCurrency(item.unit_price)}
+                  {formatCurrency(item.unit_price || 0)}
                 </Text>
               </YStack>
               <YStack alignItems="flex-end">
@@ -225,7 +316,7 @@ export default function SaleDetails() {
                   TOTAL
                 </Text>
                 <Text fontSize="$4" fontWeight={'600'}>
-                  {formatCurrency(item.total_price!)}
+                  {formatCurrency(item.price)}
                 </Text>
               </YStack>
             </XStack>

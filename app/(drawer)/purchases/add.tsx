@@ -21,6 +21,7 @@ import { ProductXML, PurchaseXML } from '@/types/PurchaseXML';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '@/utils/currency';
 import { uploadFile } from '@/services/file';
+import { applyMask } from '@/utils/cnpj';
 
 export default function PurchaseUploadScreen() {
   const theme = useTheme();
@@ -34,7 +35,6 @@ export default function PurchaseUploadScreen() {
     mutationFn: uploadFile,
     onSuccess: response => {
       const { data } = response;
-      console.log('VOLTOU', data);
 
       if (data) setPurchaseData(data);
 
@@ -84,7 +84,6 @@ export default function PurchaseUploadScreen() {
         type: 'application/xml',
       });
 
-      console.log('APPEND', formData);
       mutation.mutate(formData);
     } catch (error) {
       setIsUploading(false);
@@ -94,12 +93,15 @@ export default function PurchaseUploadScreen() {
     }
   };
 
-  const convertDateToISO = dateStr => {
+  const convertDateToISO = (dateStr: string) => {
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (regex.test(dateStr)) return dateStr;
+
     const [day, month, year] = dateStr.split('/');
     return `${year}-${month}-${day}`;
   };
 
-  const removeCnpjFormatting = cnpj => {
+  const removeCnpjFormatting = (cnpj: string) => {
     return cnpj.replace(/\D/g, '');
   };
 
@@ -171,9 +173,9 @@ export default function PurchaseUploadScreen() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       setPurchaseData(undefined);
     } catch (error) {
-      console.log(error);
+      console.warn(error);
       toast.show('Erro!', {
-        message: 'Falha ao salvar os dados no Supabase!',
+        message: 'Falha ao salvar os dados!',
       });
     }
   };
@@ -218,7 +220,7 @@ export default function PurchaseUploadScreen() {
       backgroundColor="$background"
     >
       <Text fontWeight="500" color={'$black05'}>
-        {purchaseData.cnpj}
+        {applyMask(purchaseData.cnpj)}
       </Text>
       <Text fontWeight="bold" marginBottom={'$2'}>
         {purchaseData.supplier}
@@ -264,6 +266,7 @@ export default function PurchaseUploadScreen() {
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <Text fontSize={'$5'} fontFamily={'$heading'}>
             Produtos

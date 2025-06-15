@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useTheme } from 'tamagui';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const theme = useTheme();
@@ -19,13 +19,15 @@ export default function TabLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Vendas',
+          title: 'Pedidos',
+          headerShown: false,
         }}
       />
       <Stack.Screen
-        name="[id]"
+        name="add"
         options={{
-          title: 'Venda',
+          title: 'Novo Pedido',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
     </Stack>

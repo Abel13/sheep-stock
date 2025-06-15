@@ -12,8 +12,9 @@ import {
   Select,
   Adapt,
   Sheet,
+  VisuallyHidden,
 } from 'tamagui';
-import { RefreshControl, SectionList } from 'react-native';
+import { SectionList } from 'react-native';
 import { firstMonthDay, lastMonthDay } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
 import { Sale } from '@/types/Sale';
@@ -204,8 +205,7 @@ export default function LowStockScreen() {
       <SectionList
         sections={groupedSales}
         keyExtractor={item => item.id.toString()}
-        refreshControl={<RefreshControl refreshing={isLoading} />}
-        refreshing={isLoading}
+        showsVerticalScrollIndicator={false}
         renderSectionHeader={({ section: { title } }) => (
           <YStack paddingVertical="$3" backgroundColor={'$background'}>
             <Text fontSize="$4" fontWeight="bold" color="$color10">

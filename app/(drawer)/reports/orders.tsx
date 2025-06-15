@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
 import {
   YStack,
@@ -10,9 +10,10 @@ import {
   Card,
   Text,
   Spinner,
+  VisuallyHidden,
 } from 'tamagui';
 import { useRouter } from 'expo-router';
-import { FlatList } from 'react-native';
+import { FlatList, RefreshControl } from 'react-native';
 import { Loading } from '@/components/molecules/Loading';
 
 const fetchLowStockProducts = async () => {
@@ -25,28 +26,16 @@ const fetchLowStockProducts = async () => {
 
 export default function LowStockScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     data: products,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ['lowStockProducts'],
+    queryKey: ['low_stock_products'],
     queryFn: fetchLowStockProducts,
   });
 
-  if (isLoading)
-    return (
-      <YStack
-        flex={1}
-        padding="$4"
-        paddingTop="$10"
-        backgroundColor="$background"
-        alignItems="center"
-        gap={10}
-      >
-        <Loading message="Carregando produtos..." />
-      </YStack>
-    );
   if (error)
     return (
       <YStack flex={1} padding="$4" backgroundColor="$background">
@@ -59,6 +48,8 @@ export default function LowStockScreen() {
       <FlatList
         data={products}
         keyExtractor={item => item.product_code}
+        overScrollMode="never"
+        showsVerticalScrollIndicator={false}
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}
@@ -75,7 +66,7 @@ export default function LowStockScreen() {
             radiused
             onPress={() => {
               router.navigate({
-                pathname: '/(tabs)/products/[id]',
+                pathname: '/(drawer)/products/[id]',
                 params: { id: item.product_code },
               });
             }}
