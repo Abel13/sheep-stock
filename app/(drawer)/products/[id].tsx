@@ -189,6 +189,7 @@ export default function ProductEdit() {
     control,
     reset,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<UpdateProduct>({
     resolver: yupResolver(productSchema),
@@ -384,9 +385,9 @@ export default function ProductEdit() {
       </XStack>
 
       <YStack gap="$4">
-        <YStack gap="$2">
+        <YStack gap="$3">
           {avgPrice !== null && (
-            <View style={{ marginVertical: 10 }}>
+            <YStack gap={'$2'}>
               <Text fontSize={12} color={theme.color11?.val}>
                 Preço médio de compra:{' '}
                 {convertNumberToLocaleString({
@@ -394,31 +395,82 @@ export default function ProductEdit() {
                   type: 'currency',
                 })}
               </Text>
-              <Text fontSize={12} color={theme.color9?.val}>
-                Preço de venda sugerido (
-                {convertNumberToLocaleString({
-                  value:
-                    suggestedPrice === null
-                      ? 120
-                      : ((suggestedPrice! - avgPrice!) / avgPrice!) * 100 || 0,
-                  type: 'percent',
-                })}
-                de lucro):{' '}
-                {convertNumberToLocaleString({
-                  value:
-                    suggestedPrice !== null
-                      ? suggestedPrice
-                      : (avgPrice || 0) * 2.2,
-                  type: 'currency',
-                })}
-              </Text>
-            </View>
+
+              <YStack
+                borderWidth={1}
+                padding={'$2'}
+                borderColor={theme.color9?.val}
+                borderRadius={'$2'}
+                gap={'$2'}
+              >
+                <Text
+                  fontSize={12}
+                  color={theme.color9?.val}
+                  fontWeight={'bold'}
+                >
+                  {`Preço de venda sugerido: ${convertNumberToLocaleString({
+                    value:
+                      suggestedPrice !== null
+                        ? suggestedPrice
+                        : (avgPrice || 0) * 2.2,
+                    type: 'currency',
+                  })}`}
+                </Text>
+                <XStack justifyContent="space-between">
+                  <Text fontSize={12} color={theme.color9?.val}>
+                    {`MARGEM DE LUCRO: ${convertNumberToLocaleString({
+                      value:
+                        suggestedPrice === null
+                          ? ((avgPrice! * 2.2 - avgPrice!) /
+                              (avgPrice! * 2.2)) *
+                            100
+                          : ((suggestedPrice! - avgPrice!) / suggestedPrice!) *
+                              100 || 0,
+                      type: 'percent',
+                    })}`}
+                  </Text>
+                  <Text fontSize={12} color={theme.color9?.val}>
+                    {`MARKUP: ${convertNumberToLocaleString({
+                      value:
+                        suggestedPrice === null
+                          ? 120
+                          : ((suggestedPrice! - avgPrice!) / avgPrice!) * 100 ||
+                            0,
+                      type: 'percent',
+                    })}`}
+                  </Text>
+                </XStack>
+              </YStack>
+            </YStack>
           )}
-          <CurrencyFormField
-            name="sale_price"
-            control={control}
-            label="Preço de venda"
-          />
+          <YStack gap={'$1'}>
+            <CurrencyFormField
+              name="sale_price"
+              control={control}
+              label="Preço de venda"
+            />
+            {getValues('sale_price') > 0 && (
+              <XStack justifyContent="space-between" paddingHorizontal={'$2'}>
+                <Text fontSize={12} color={theme.gray9?.val}>
+                  {`MARGEM DE LUCRO: ${convertNumberToLocaleString({
+                    value:
+                      ((getValues('sale_price') - avgPrice!) /
+                        getValues('sale_price')) *
+                        100 || 0,
+                    type: 'percent',
+                  })}`}
+                </Text>
+                <Text fontSize={12} color={theme.gray9?.val}>
+                  {`MARKUP: ${convertNumberToLocaleString({
+                    value:
+                      ((getValues('sale_price') - avgPrice!) / avgPrice!) *
+                        100 || 0,
+                    type: 'percent',
+                  })}`}
+                </Text>
+              </XStack>
+            )}
+          </YStack>
         </YStack>
 
         <YStack gap="$2">

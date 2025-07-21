@@ -25,6 +25,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { SaleFormValues, saleSchema } from '@/schemas/saleSchema';
 import { FormField } from '@/components/molecules/FormField/FormField';
 import { Loading } from '@/components/molecules/Loading';
+import { Printer } from '@tamagui/lucide-icons';
+import { useInvoice } from '@/hooks/useInvoice';
 
 const fetchSaleDetails = async ({ queryKey }: { queryKey: string[] }) => {
   const [, saleId] = queryKey;
@@ -95,6 +97,7 @@ export default function SaleDetails() {
 
   const queryClient = useQueryClient();
   const toast = useToastController();
+  const { print } = useInvoice();
 
   const { id } = useLocalSearchParams();
   const saleId = id?.toString() || '';
@@ -161,6 +164,15 @@ export default function SaleDetails() {
 
   const handleDeleteSale = () => {
     deleteMutation.mutate({ id: id as string });
+  };
+
+  const handlePrint = () => {
+    print({
+      customerName: getValues('customerName'),
+      selectedItems: [...(data?.products || []), ...(data?.services || [])],
+      totalAmount: data?.sale.total_amount || 0,
+      valuePaid: getValues('valuePaid'),
+    });
   };
 
   const groupedSales = useMemo(() => {
@@ -292,6 +304,16 @@ export default function SaleDetails() {
               <Button.Icon>
                 <Ionicons
                   name="save-outline"
+                  size={24}
+                  color={theme.color10?.val}
+                />
+              </Button.Icon>
+            </Button>
+
+            <Button onPress={handlePrint} color={theme.color10?.val}>
+              <Button.Icon>
+                <Ionicons
+                  name="print-outline"
                   size={24}
                   color={theme.color10?.val}
                 />

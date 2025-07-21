@@ -58,7 +58,7 @@ const ServiceItem = memo(
             {item.service_code}
           </Text>
           <XStack justifyContent="space-between" alignItems="center" flex={1}>
-            <Text fontSize="$4" fontWeight="500">
+            <Text fontSize="$4" fontWeight="500" flex={1}>
               {item.name}
             </Text>
             <Text fontSize="$5" fontWeight={600}>
