@@ -19,7 +19,7 @@ import { FlatList } from 'react-native';
 import { useToastController } from '@tamagui/toast';
 import { ProductXML, PurchaseXML } from '@/types/PurchaseXML';
 import { Ionicons } from '@expo/vector-icons';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString } from '@/utils/number';
 import { uploadFile } from '@/services/file';
 import { applyMask } from '@/utils/cnpj';
 
@@ -230,32 +230,60 @@ export default function PurchaseUploadScreen() {
       <YStack marginTop={'$3'} borderBottomWidth={'$1'} gap={'$1'}>
         <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
           <Text fontWeight={500}>ICMS ST:</Text>
-          <Text>{formatCurrency(purchaseData.icms_st)}</Text>
+          <Text>
+            {convertNumberToLocaleString({
+              value: purchaseData.icms_st,
+              type: 'currency',
+            })}
+          </Text>
         </XStack>
         <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
           <Text fontWeight={500}>IPI:</Text>
-          <Text>{formatCurrency(purchaseData.ipi)}</Text>
+          <Text>
+            {convertNumberToLocaleString({
+              value: purchaseData.ipi,
+              type: 'currency',
+            })}
+          </Text>
         </XStack>
 
         <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
           <Text fontWeight={500}>Frete:</Text>
-          <Text>{formatCurrency(purchaseData.shipping_cost)}</Text>
+          <Text>
+            {convertNumberToLocaleString({
+              value: purchaseData.shipping_cost,
+              type: 'currency',
+            })}
+          </Text>
         </XStack>
         <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
           <Text fontWeight={500}>Total em Produtos:</Text>
-          <Text>{formatCurrency(purchaseData.total_products_value)}</Text>
+          <Text>
+            {convertNumberToLocaleString({
+              value: purchaseData.total_products_value,
+              type: 'currency',
+            })}
+          </Text>
         </XStack>
         <XStack borderBottomWidth={'$0.25'} justifyContent="space-between">
           <Text fontWeight={500} color={'$olive'}>
             Desconto:
           </Text>
           <Text color={'$olive'}>
-            - {formatCurrency(purchaseData.discount)}
+            -{' '}
+            {convertNumberToLocaleString({
+              value: purchaseData.discount,
+              type: 'currency',
+            })}
           </Text>
         </XStack>
       </YStack>
       <Text alignSelf="flex-end" fontWeight={600} margin={'$1'}>
-        Total: {formatCurrency(purchaseData.total_value)}
+        Total:{' '}
+        {convertNumberToLocaleString({
+          value: purchaseData.total_value,
+          type: 'currency',
+        })}
       </Text>
 
       <Spacer size="$4" />
@@ -288,7 +316,11 @@ export default function PurchaseUploadScreen() {
             <YStack flex={1} gap="$2">
               <Text>{item.product_name}</Text>
               <Text>
-                Total: {formatCurrency(item.unit_price * item.quantity)}
+                Total:{' '}
+                {convertNumberToLocaleString({
+                  value: item.unit_price * item.quantity,
+                  type: 'currency',
+                })}
               </Text>
             </YStack>
             <XStack gap="$2" alignItems="center" marginInline="$2">

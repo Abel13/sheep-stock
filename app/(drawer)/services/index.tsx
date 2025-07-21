@@ -7,7 +7,7 @@ import { memo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { YStack, Text, useTheme, Spacer, Card, XStack, Image } from 'tamagui';
 import { Service } from '@/types/Service';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString } from '@/utils/number';
 
 const fetchServices = async (search: string) => {
   let query = supabase.from('services').select('*').order('name');
@@ -62,7 +62,10 @@ const ServiceItem = memo(
               {item.name}
             </Text>
             <Text fontSize="$5" fontWeight={600}>
-              {formatCurrency(item.price || 0)}
+              {convertNumberToLocaleString({
+                value: item.price || 0,
+                type: 'currency',
+              })}
             </Text>
           </XStack>
         </YStack>

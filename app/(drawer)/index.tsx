@@ -22,7 +22,7 @@ import { saleSchema, SaleFormValues } from '@/schemas/saleSchema';
 import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { FormField } from '@/components/molecules/FormField/FormField';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString } from '@/utils/number';
 import { createSale } from '@/services/sale';
 import { SearchField } from '@/components/molecules/SearchField';
 import { ProductListItem } from '@/components/molecules/ProductListItem';
@@ -426,7 +426,10 @@ export default function SaleScreen() {
             </XStack>
 
             <Text fontSize="$5" textAlign="right">
-              Total: {formatCurrency(totalAmount)}
+              {`Total: ${convertNumberToLocaleString({
+                value: totalAmount,
+                type: 'currency',
+              })}`}
             </Text>
           </YStack>
 
@@ -503,7 +506,10 @@ export default function SaleScreen() {
               {'VALOR PAGO: '}
             </Text>
             <Text marginBottom={'$2'}>
-              {formatCurrency(getValues('valuePaid')) || formatCurrency(0)}
+              {convertNumberToLocaleString({
+                value: getValues('valuePaid'),
+                type: 'currency',
+              })}
             </Text>
           </XStack>
           <FlatList
@@ -519,7 +525,10 @@ export default function SaleScreen() {
               <YStack>
                 <Separator marginVertical={'$2'} />
                 <Text textAlign="right" fontSize={'$5'}>
-                  TOTAL: {formatCurrency(totalAmount)}
+                  {`Total: ${convertNumberToLocaleString({
+                    value: totalAmount,
+                    type: 'currency',
+                  })}`}
                 </Text>
               </YStack>
             }
@@ -538,7 +547,10 @@ export default function SaleScreen() {
                   {item.name}
                 </Text>
                 <Text fontSize={'$3'} width={'$7'} textAlign="right">
-                  {formatCurrency((item.price || 0) * item.quantity)}
+                  {convertNumberToLocaleString({
+                    value: (item.price || 0) * item.quantity,
+                    type: 'currency',
+                  })}
                 </Text>
               </XStack>
             )}

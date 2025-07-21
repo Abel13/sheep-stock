@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabaseClient';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   YStack,
   XStack,
@@ -13,11 +13,12 @@ import {
   useTheme,
   Separator,
   Spinner,
+  AlertDialog,
 } from 'tamagui';
 import { FlatList, SectionList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useToastController } from '@tamagui/toast';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString, formatCurrency } from '@/utils/number';
 import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -85,6 +86,10 @@ const updateCustomer = async ({
   if (error) throw new Error(error.message);
 };
 
+const deleteSale = async ({ id }: { id: string }) => {
+  const {} = await supabase.from('sales').delete().eq('id', id);
+};
+
 export default function SaleDetails() {
   const theme = useTheme();
 
@@ -114,6 +119,23 @@ export default function SaleDetails() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteSale,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      toast.show('Tudo certo!', {
+        message: 'Dados excluídos com sucesso!',
+      });
+
+      router.back();
+    },
+    onError: error => {
+      toast.show('Erro!', {
+        message: 'Falha ao excluir dados!',
+      });
+    },
+  });
+
   const {
     control,
     getValues,
@@ -129,12 +151,16 @@ export default function SaleDetails() {
     },
   });
 
-  const handleSaveCustomer: SubmitHandler<SaleFormValues> = data => {
+  const handleSaveSale: SubmitHandler<SaleFormValues> = data => {
     mutation.mutate({
       customerName: data.customerName,
       valuePaid: data.valuePaid,
       saleId,
     });
+  };
+
+  const handleDeleteSale = () => {
+    deleteMutation.mutate({ id: id as string });
   };
 
   const groupedSales = useMemo(() => {
@@ -235,7 +261,11 @@ export default function SaleDetails() {
           {new Date(data.sale.sale_date || '').toLocaleDateString()}
         </Text>
         <Text fontWeight={'bold'} fontSize={22}>
-          Total: {formatCurrency(data.sale.total_amount)}
+          Total:{' '}
+          {convertNumberToLocaleString({
+            value: data.sale.total_amount,
+            type: 'currency',
+          })}
         </Text>
         <YStack marginTop={'$2'}>
           <FormField
@@ -252,11 +282,81 @@ export default function SaleDetails() {
             label="Valor pago"
           />
           <YStack margin={10} />
-          <Button onPress={handleSubmit(handleSaveCustomer)} theme={'active'}>
-            <Button.Icon>
-              <Ionicons name="save-outline" size={24} />
-            </Button.Icon>
-          </Button>
+          <XStack gap={10} justifyContent="center">
+            <Button
+              flex={1}
+              onPress={handleSubmit(handleSaveSale)}
+              theme={'active'}
+              size={'$4'}
+            >
+              <Button.Icon>
+                <Ionicons
+                  name="save-outline"
+                  size={24}
+                  color={theme.color10?.val}
+                />
+              </Button.Icon>
+            </Button>
+
+            <AlertDialog native>
+              <AlertDialog.Trigger asChild>
+                <Button>
+                  <Button.Icon>
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color={theme.color10?.val}
+                    />
+                  </Button.Icon>
+                </Button>
+              </AlertDialog.Trigger>
+
+              <AlertDialog.Portal>
+                <AlertDialog.Overlay
+                  key="overlay"
+                  animation="fast"
+                  opacity={0.5}
+                  enterStyle={{ opacity: 0 }}
+                  exitStyle={{ opacity: 0 }}
+                />
+                <AlertDialog.Content
+                  bordered
+                  elevate
+                  key="content"
+                  animation={[
+                    'fast',
+                    {
+                      opacity: {
+                        overshootClamping: true,
+                      },
+                    },
+                  ]}
+                  enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
+                  exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
+                  x={0}
+                  scale={1}
+                  opacity={1}
+                  y={0}
+                >
+                  <YStack gap="$4">
+                    <AlertDialog.Title>Atenção!</AlertDialog.Title>
+                    <AlertDialog.Description>
+                      Tem certeza que deseja excluir esta venda?
+                    </AlertDialog.Description>
+
+                    <XStack gap="$3" justifyContent="flex-end">
+                      <AlertDialog.Cancel asChild>
+                        <Button>Não</Button>
+                      </AlertDialog.Cancel>
+                      <AlertDialog.Action asChild onPress={handleDeleteSale}>
+                        <Button>Sim</Button>
+                      </AlertDialog.Action>
+                    </XStack>
+                  </YStack>
+                </AlertDialog.Content>
+              </AlertDialog.Portal>
+            </AlertDialog>
+          </XStack>
         </YStack>
       </YStack>
 
@@ -281,7 +381,11 @@ export default function SaleDetails() {
               fontWeight={600}
               paddingInline="$2"
             >
-              Total: {formatCurrency(totalPrice)}
+              Total:{' '}
+              {convertNumberToLocaleString({
+                value: totalPrice,
+                type: 'currency',
+              })}
             </Text>
 
             <Separator borderColor="$borderColor" marginTop="$2" />
@@ -308,7 +412,10 @@ export default function SaleDetails() {
               <YStack alignItems="center">
                 <Text fontWeight={'600'}>PREÇO UNIT.:</Text>
                 <Text fontWeight={'600'}>
-                  {formatCurrency(item.unit_price || 0)}
+                  {convertNumberToLocaleString({
+                    value: item.unit_price || 0,
+                    type: 'currency',
+                  })}
                 </Text>
               </YStack>
               <YStack alignItems="flex-end">
@@ -316,7 +423,10 @@ export default function SaleDetails() {
                   TOTAL
                 </Text>
                 <Text fontSize="$4" fontWeight={'600'}>
-                  {formatCurrency(item.price)}
+                  {convertNumberToLocaleString({
+                    value: item.price,
+                    type: 'currency',
+                  })}
                 </Text>
               </YStack>
             </XStack>

@@ -1,7 +1,7 @@
 import { Input, InputProps, Text, XStack } from 'tamagui';
 import { forwardRef } from 'react';
 import { TextInput } from 'react-native';
-import { formatCurrency, parseCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString, parseCurrency } from '@/utils/number';
 
 export interface CurrencyInputProps
   extends Omit<InputProps, 'value' | 'onChange'> {
@@ -13,9 +13,10 @@ export interface CurrencyInputProps
 
 export const CurrencyInput = forwardRef<TextInput, CurrencyInputProps>(
   ({ value, onChange, error, label, ...props }, ref) => {
-    const displayValue = value
-      ? formatCurrency(Number(value).toFixed(2))
-      : formatCurrency(0);
+    const displayValue = convertNumberToLocaleString({
+      value: value || 0,
+      type: 'currency',
+    });
 
     const handleChangeText = (text: string) => {
       const numbers = parseCurrency(text.replace(/\D/g, ''));

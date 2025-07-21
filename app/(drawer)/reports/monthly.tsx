@@ -16,7 +16,7 @@ import {
 } from 'tamagui';
 import { SectionList } from 'react-native';
 import { firstMonthDay, lastMonthDay } from '@/utils/date';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString, formatCurrency } from '@/utils/number';
 import { Sale } from '@/types/Sale';
 import { useMemo, useState } from 'react';
 import { ChevronDown } from '@tamagui/lucide-icons';
@@ -222,7 +222,11 @@ export default function LowStockScreen() {
               fontWeight={600}
               paddingInline="$2"
             >
-              Total: {formatCurrency(totalAmount)}
+              Total:{' '}
+              {convertNumberToLocaleString({
+                value: totalAmount,
+                type: 'currency',
+              })}
             </Text>
             <Text
               fontSize="$3"
@@ -230,7 +234,11 @@ export default function LowStockScreen() {
               textAlign="right"
               paddingInline="$2"
             >
-              Total Pago: {formatCurrency(totalPaid)}
+              Total Pago:{' '}
+              {convertNumberToLocaleString({
+                value: totalPaid,
+                type: 'currency',
+              })}
             </Text>
             <Separator borderColor="$borderColor" marginTop="$2" />
           </YStack>
@@ -251,7 +259,12 @@ export default function LowStockScreen() {
                 <Text fontSize={12} color="$colorSubtle">
                   TOTAL
                 </Text>
-                <Text fontSize="$4">{formatCurrency(item.total_amount)}</Text>
+                <Text fontSize="$4">
+                  {convertNumberToLocaleString({
+                    value: item.total_amount,
+                    type: 'currency',
+                  })}
+                </Text>
                 <Spacer size="$2" />
                 <XStack alignItems="flex-end">
                   <Text
@@ -262,7 +275,11 @@ export default function LowStockScreen() {
                         : '$colorSubtle'
                     }
                   >
-                    TOTAL PAGO: {formatCurrency(item.value_paid)}
+                    TOTAL PAGO:{' '}
+                    {convertNumberToLocaleString({
+                      value: item.value_paid,
+                      type: 'currency',
+                    })}
                   </Text>
                 </XStack>
               </YStack>

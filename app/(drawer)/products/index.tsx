@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { YStack, XStack, Text, Card, Spacer, Image, Separator } from 'tamagui';
 import { SearchField } from '@/components/molecules/SearchField';
 import { useForm } from 'react-hook-form';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString } from '@/utils/number';
 import { Loading } from '@/components/molecules/Loading';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -69,7 +69,10 @@ const ProductItem = memo(
             {item.product_name}
           </Text>
           <Text marginTop="$3" fontSize="$3">
-            Preço de venda: {formatCurrency(item.sale_price || 0)}
+            {`Preço de venda: ${convertNumberToLocaleString({
+              value: item.sale_price || 0,
+              type: 'currency',
+            })}`}
           </Text>
         </YStack>
         <YStack alignItems="center" justifyContent="center">

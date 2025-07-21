@@ -1,4 +1,5 @@
 import { SearchItemProps } from '@/types/ItemSale';
+import { convertNumberToLocaleString } from '@/utils/number';
 import { memo } from 'react';
 import { ListItem, Text, YStack } from 'tamagui';
 
@@ -26,7 +27,10 @@ export const ProductListItem = memo(
         </Text>
         <Text fontWeight="500">{item.name}</Text>
         <Text marginTop="$2">
-          Preço de venda: {(item.price || 0).toFixed(2)}
+          {`Preço de venda: ${convertNumberToLocaleString({
+            value: item.price || 0,
+            type: 'currency',
+          })}`}
         </Text>
       </YStack>
       <YStack justifyContent="center" alignItems="center">

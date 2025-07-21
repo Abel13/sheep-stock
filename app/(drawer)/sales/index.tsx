@@ -12,7 +12,7 @@ import {
   VisuallyHidden,
 } from 'tamagui';
 import { Sale } from '@/types/Sale';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString } from '@/utils/number';
 import { Loading } from '@/components/molecules/Loading';
 
 const fetchSales = async () => {
@@ -91,7 +91,11 @@ export default function Sales() {
               textAlign="right"
               paddingInline="$2"
             >
-              Total: {formatCurrency(totalAmount)}
+              Total:{' '}
+              {convertNumberToLocaleString({
+                value: totalAmount,
+                type: 'currency',
+              })}
             </Text>
             <Separator borderColor="$borderColor" marginTop="$2" />
           </YStack>
@@ -124,7 +128,12 @@ export default function Sales() {
                 <Text fontSize={12} color="$colorSubtle">
                   TOTAL
                 </Text>
-                <Text fontSize="$4">{formatCurrency(item.total_amount)}</Text>
+                <Text fontSize="$4">
+                  {convertNumberToLocaleString({
+                    value: item.total_amount,
+                    type: 'currency',
+                  })}
+                </Text>
                 <Spacer size="$2" />
                 <XStack alignItems="flex-end">
                   <Text
@@ -135,7 +144,11 @@ export default function Sales() {
                         : '$colorSubtle'
                     }
                   >
-                    TOTAL PAGO: {formatCurrency(item.value_paid)}
+                    TOTAL PAGO:{' '}
+                    {convertNumberToLocaleString({
+                      value: item.value_paid,
+                      type: 'currency',
+                    })}
                   </Text>
                 </XStack>
               </YStack>

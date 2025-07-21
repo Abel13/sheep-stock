@@ -1,5 +1,5 @@
 import * as Print from 'expo-print';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString, formatCurrency } from '@/utils/number';
 import { ItemSale } from '@/types/ItemSale';
 import { shareAsync } from 'expo-sharing';
 
@@ -115,7 +115,12 @@ export const useInvoice = () => {
                     <div class="info">
                       <p><strong>Cliente:</strong> ${customerName || '-'}</p>
                       <p><strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
-                      <p><strong>Valor pago:</strong> ${formatCurrency(valuePaid || 0)}</p>
+                      <p><strong>Valor pago:</strong> ${convertNumberToLocaleString(
+                        {
+                          value: valuePaid || 0,
+                          type: 'currency',
+                        },
+                      )}</p>
                     </div>
 
                     <table>

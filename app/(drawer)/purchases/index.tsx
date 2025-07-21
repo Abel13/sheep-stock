@@ -11,7 +11,7 @@ import {
 } from 'tamagui';
 import { FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString, formatCurrency } from '@/utils/number';
 import { Loading } from '@/components/molecules/Loading';
 
 const fetchOrders = async () => {
@@ -82,7 +82,10 @@ export default function OrderList() {
                 </Text>
               </XStack>
               <Text textAlign="right" fontSize="$5" fontWeight="300">
-                {formatCurrency(item.total_value || 0)}
+                {convertNumberToLocaleString({
+                  value: item.total_value || 0,
+                  type: 'currency',
+                })}
               </Text>
             </YStack>
           </ListItem>

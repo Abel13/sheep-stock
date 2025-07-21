@@ -25,7 +25,7 @@ import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyForm
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { formatCurrency } from '@/utils/currency';
+import { convertNumberToLocaleString } from '@/utils/number';
 import { DeleteObjectRequest } from 'aws-sdk/clients/s3';
 import { Loading } from '@/components/molecules/Loading';
 
@@ -388,19 +388,29 @@ export default function ProductEdit() {
           {avgPrice !== null && (
             <View style={{ marginVertical: 10 }}>
               <Text fontSize={12} color={theme.color11?.val}>
-                Preço médio de compra: {formatCurrency(avgPrice || 0)}
+                Preço médio de compra:{' '}
+                {convertNumberToLocaleString({
+                  value: avgPrice,
+                  type: 'currency',
+                })}
               </Text>
               <Text fontSize={12} color={theme.color9?.val}>
                 Preço de venda sugerido (
-                {suggestedPrice === null
-                  ? '120%'
-                  : `${(((suggestedPrice! - avgPrice!) / avgPrice!) * 100 || 0).toFixed(0)}% `}
+                {convertNumberToLocaleString({
+                  value:
+                    suggestedPrice === null
+                      ? 120
+                      : ((suggestedPrice! - avgPrice!) / avgPrice!) * 100 || 0,
+                  type: 'percent',
+                })}
                 de lucro):{' '}
-                {formatCurrency(
-                  suggestedPrice !== null
-                    ? suggestedPrice || 0
-                    : (avgPrice || 0) * 2.2,
-                )}
+                {convertNumberToLocaleString({
+                  value:
+                    suggestedPrice !== null
+                      ? suggestedPrice
+                      : (avgPrice || 0) * 2.2,
+                  type: 'currency',
+                })}
               </Text>
             </View>
           )}
