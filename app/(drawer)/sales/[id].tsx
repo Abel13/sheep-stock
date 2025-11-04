@@ -204,6 +204,7 @@ export default function SaleDetails() {
 
     print({
       customerName: getValues('customerName'),
+      sellerName: data?.sellerName || '',
       selectedItems: items,
       totalAmount: data?.sale.total_amount || 0,
       valuePaid: getValues('valuePaid'),
