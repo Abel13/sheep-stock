@@ -27,6 +27,7 @@ export default function TabLayout() {
         options={{
           title: 'Venda',
           headerBackButtonDisplayMode: 'minimal',
+          headerTitleAlign: 'center',
         }}
       />
     </Stack>

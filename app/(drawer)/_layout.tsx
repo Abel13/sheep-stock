@@ -32,6 +32,15 @@ export default function TabLayout() {
           }}
         />
         <Drawer.Screen
+          name="vendors/index"
+          options={{
+            title: 'Vendedores',
+            drawerIcon: ({ color, size }) => (
+              <Ionicons name="people-outline" color={color} size={size} />
+            ),
+          }}
+        />
+        <Drawer.Screen
           name="sales"
           options={{
             title: 'Vendas',

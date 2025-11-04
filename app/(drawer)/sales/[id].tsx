@@ -18,7 +18,8 @@ import {
 import { FlatList, SectionList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useToastController } from '@tamagui/toast';
-import { convertNumberToLocaleString, formatCurrency } from '@/utils/number';
+import { convertNumberToLocaleString } from '@/utils/number';
+import { ItemSale } from '@/types/ItemSale';
 import { CurrencyFormField } from '@/components/molecules/FormField/CurrencyFormField';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -65,7 +66,22 @@ const fetchSaleDetails = async ({ queryKey }: { queryKey: string[] }) => {
 
   if (productError || serviceError) throw new Error('Falha ao buscar os itens');
 
-  return { sale: saleData, products: saleProducts, services: saleServices };
+  let sellerName: string | null = null;
+  if (saleData?.seller_id) {
+    const { data: seller, error: sellerError } = await supabase
+      .from('sellers')
+      .select('name')
+      .eq('id', saleData.seller_id)
+      .single();
+    if (!sellerError) sellerName = seller?.name ?? null;
+  }
+
+  return {
+    sale: saleData,
+    products: saleProducts,
+    services: saleServices,
+    sellerName,
+  };
 };
 
 const updateCustomer = async ({
@@ -167,9 +183,28 @@ export default function SaleDetails() {
   };
 
   const handlePrint = () => {
+    const items: ItemSale[] = [
+      ...(data?.products || []).map((p, index) => ({
+        index,
+        code: p.product_code || '',
+        name: p.products?.product_name || '',
+        price: p.unit_price || 0,
+        stock_quantity: 1,
+        quantity: p.quantity || 1,
+      })),
+      ...(data?.services || []).map((s, index) => ({
+        index: (data?.products?.length || 0) + index,
+        code: s.service_code || '',
+        name: s.services?.name || '',
+        price: s.price || 0,
+        stock_quantity: 1,
+        quantity: 1,
+      })),
+    ];
+
     print({
       customerName: getValues('customerName'),
-      selectedItems: [...(data?.products || []), ...(data?.services || [])],
+      selectedItems: items,
       totalAmount: data?.sale.total_amount || 0,
       valuePaid: getValues('valuePaid'),
     });
@@ -271,6 +306,9 @@ export default function SaleDetails() {
         </Text>
         <Text fontSize={12} fontWeight={'600'}>
           {new Date(data.sale.sale_date || '').toLocaleDateString()}
+        </Text>
+        <Text fontSize={12} color={'$gray10Dark'}>
+          {`Vendedor(a): ${data.sellerName || '--'}`}
         </Text>
         <Text fontWeight={'bold'} fontSize={22}>
           Total:{' '}

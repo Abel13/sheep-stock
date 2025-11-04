@@ -38,6 +38,8 @@ import {
   SearchItemProps,
 } from '@/types/ItemSale';
 import { useInvoice } from '@/hooks/useInvoice';
+import { FormSelect } from '@/components/molecules/FormField/FormSelect';
+import { Seller } from '@/types/Seller';
 
 const fetchProducts = async (search: string): Promise<Product[]> => {
   try {
@@ -69,6 +71,14 @@ const fetchServices = async (search: string): Promise<Service[]> => {
   } catch (error) {
     return [];
   }
+};
+const fetchSellers = async (): Promise<Seller[]> => {
+  const { data, error } = await supabase
+    .from('sellers')
+    .select('*')
+    .order('name');
+  if (error) return [];
+  return data as Seller[];
 };
 
 export default function SaleScreen() {
@@ -102,6 +112,11 @@ export default function SaleScreen() {
     enabled: !!search,
   });
 
+  const { data: sellers } = useQuery({
+    queryKey: ['sellers'],
+    queryFn: fetchSellers,
+  });
+
   const {
     control,
     handleSubmit,
@@ -118,6 +133,7 @@ export default function SaleScreen() {
     },
     defaultValues: {
       customerName: '',
+      sellerId: '',
       valuePaid: 0,
     },
   });
@@ -273,10 +289,11 @@ export default function SaleScreen() {
   }, [selectedProducts, selectedServices]);
 
   const allowFinish = selectedItems.length > 0;
-  const handleFinalizeSale: SubmitHandler<SaleFormValues> = async data => {
+  const handleFinalizeSale: SubmitHandler<any> = async data => {
     try {
       const saleData = {
         customer_name: data.customerName,
+        seller_id: data.sellerId || null,
         value_paid: Number(data.valuePaid),
         total_amount: totalAmount,
       };
@@ -301,8 +318,11 @@ export default function SaleScreen() {
   };
 
   const handlePrint = () => {
+    const sellerName =
+      sellers?.find(s => s.id === getValues('sellerId'))?.name || '';
     print({
       customerName: getValues('customerName'),
+      sellerName,
       selectedItems,
       totalAmount,
       valuePaid: getValues('valuePaid'),
@@ -312,6 +332,13 @@ export default function SaleScreen() {
   return (
     <YStack flex={1} backgroundColor="$background">
       <YStack padding={'$4'} gap={'$2'}>
+        <FormSelect
+          control={control}
+          name="sellerId"
+          label="Vendedor(a)"
+          options={(sellers || []).map(s => ({ value: s.id, label: s.name }))}
+          placeholder="Selecione..."
+        />
         <FormField
           control={control}
           name="customerName"
@@ -500,6 +527,9 @@ export default function SaleScreen() {
           </Button>
           <Text marginBottom={'$2'} fontWeight={'bold'} fontSize={'$5'}>
             {getValues('customerName') || '--'}
+          </Text>
+          <Text marginBottom={'$2'} color={'$gray10Dark'}>
+            {`Vendedor(a): ${(sellers || []).find(s => s.id === getValues('sellerId'))?.name || '--'}`}
           </Text>
           <XStack>
             <Text marginBottom={'$2'} fontWeight={'bold'}>

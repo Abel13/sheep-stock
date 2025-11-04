@@ -45,6 +45,13 @@ export default function TabLayout() {
           headerBackButtonDisplayMode: 'minimal',
         }}
       />
+      <Stack.Screen
+        name="sales_by_seller"
+        options={{
+          title: 'Vendas por vendedor',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
     </Stack>
   );
 }

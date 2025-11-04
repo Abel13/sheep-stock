@@ -17,6 +17,11 @@ const reports = [
     description: 'Produtos mais vendidos da loja.',
     route: '/reports/best_sellers',
   },
+  {
+    name: 'Vendas mensais por vendedor',
+    description: 'Total vendido por vendedor no mês/ano selecionados.',
+    route: '/reports/sales_by_seller',
+  },
 ];
 
 export default function Reports() {
