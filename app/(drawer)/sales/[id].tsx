@@ -26,7 +26,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { SaleFormValues, saleSchema } from '@/schemas/saleSchema';
 import { FormField } from '@/components/molecules/FormField/FormField';
 import { Loading } from '@/components/molecules/Loading';
-import { Printer } from '@tamagui/lucide-icons';
 import { useInvoice } from '@/hooks/useInvoice';
 
 const fetchSaleDetails = async ({ queryKey }: { queryKey: string[] }) => {
@@ -165,6 +164,7 @@ export default function SaleDetails() {
   } = useForm({
     resolver: yupResolver(saleSchema),
     defaultValues: {
+      sellerId: '',
       customerName: '',
       valuePaid: 0,
     },
@@ -275,6 +275,7 @@ export default function SaleDetails() {
     if (data) {
       setValue('customerName', data.sale.customer_name || '');
       setValue('valuePaid', data.sale.value_paid);
+      setValue('sellerId', data.sale.seller_id || '');
     }
   }, [data]);
 
