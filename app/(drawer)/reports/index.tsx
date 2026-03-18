@@ -13,6 +13,11 @@ const reports = [
     route: '/reports/monthly',
   },
   {
+    name: 'MEI (DASN-SIMEI)',
+    description: 'Receita do ano e campos manuais básicos.',
+    route: '/reports/mei',
+  },
+  {
     name: 'Mais vendidos',
     description: 'Produtos mais vendidos da loja.',
     route: '/reports/best_sellers',

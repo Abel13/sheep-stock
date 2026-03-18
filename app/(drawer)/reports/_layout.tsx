@@ -39,6 +39,13 @@ export default function TabLayout() {
         }}
       />
       <Stack.Screen
+        name="mei"
+        options={{
+          title: 'MEI (DASN-SIMEI)',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
+      <Stack.Screen
         name="best_sellers"
         options={{
           title: 'Mais Vendidos',
